@@ -1,6 +1,11 @@
-# USB I2C Controller - FT232H
+<div align="center">
+  <h1><code>USB I2C Controller - FT232H</code></h1>
+  <p>
+    <img src="doc/image.png"/>
+  </p>
+</div>
 
-Windows application for I2C communication control using FT232H
+## Windows application for I2C communication control using FT232H
 
 ## Overview
 
@@ -36,7 +41,7 @@ This application is a GUI tool for communicating with I2C devices from Windows, 
 2. Run the downloaded installer to install the driver
 3. Connect the FT232H device to USB and verify it's recognized in Device Manager
 
-### 2. Build Application
+### 2. Build Application or Download Release Binary
 
 ```powershell
 # Clone repository (or navigate to existing folder)
@@ -48,6 +53,8 @@ dotnet build
 # Run
 dotnet run
 ```
+
+if you prefer not to build from source, download the latest release binary from the [Releases](https://github.com/hnaka/UsbI2cController/releases) page.
 
 ## Usage
 

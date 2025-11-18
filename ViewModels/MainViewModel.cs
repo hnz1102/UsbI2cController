@@ -456,17 +456,17 @@ namespace UsbI2cController.ViewModels
 
                 if (success)
                 {
-                    StatusMessage = $"書き込み成功: {data.Length}バイト @ 0x{address:X2}";
+                    UpdateStatusMessage("StatusWriteSuccess", data.Length, address);
                 }
                 else
                 {
-                    StatusMessage = "書き込み失敗";
+                    UpdateStatusMessage("StatusWriteFailed");
                     MessageBox.Show("I2C書き込みに失敗しました。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                StatusMessage = $"書き込みエラー: {ex.Message}";
+                UpdateStatusMessage("StatusWriteError", ex.Message);
                 MessageBox.Show($"書き込みエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -527,19 +527,19 @@ namespace UsbI2cController.ViewModels
                         ? DataFormatConverter.ToHexString(data, true)
                         : DataFormatConverter.ToDecString(data);
                     
-                    StatusMessage = $"読み込み成功: {data.Length}バイト @ 0x{address:X2}";
+                    UpdateStatusMessage("StatusReadSuccess", data.Length, address);
                 }
                 else
                 {
                     ReadData = "";
-                    StatusMessage = "読み込み失敗";
+                    UpdateStatusMessage("StatusReadFailed");
                     MessageBox.Show("I2C読み込みに失敗しました。", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
                 ReadData = "";
-                StatusMessage = $"読み込みエラー: {ex.Message}";
+                UpdateStatusMessage("StatusReadError", ex.Message);
                 MessageBox.Show($"読み込みエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -548,7 +548,7 @@ namespace UsbI2cController.ViewModels
         private void ClearHistory()
         {
             TransactionHistory.Clear();
-            StatusMessage = "履歴をクリアしました";
+            UpdateStatusMessage("StatusHistoryCleared");
         }
 
         [RelayCommand]
@@ -855,7 +855,7 @@ namespace UsbI2cController.ViewModels
 
                     if (CommandOperations.Count > 0)
                     {
-                        StatusMessage = $"前回のコマンドシーケンスを復元しました ({CommandOperations.Count} 操作)";
+                        UpdateStatusMessage("StatusSequenceRestored", CommandOperations.Count);
                     }
                 }
             }
@@ -1169,16 +1169,16 @@ namespace UsbI2cController.ViewModels
 
                 if (overallSuccess)
                 {
-                    StatusMessage = $"シーケンス実行成功: {CommandOperations.Count} 操作完了";
+                    UpdateStatusMessage("StatusSequenceSuccess", CommandOperations.Count);
                 }
                 else
                 {
-                    StatusMessage = "シーケンス実行失敗";
+                    UpdateStatusMessage("StatusSequenceFailed");
                 }
             }
             catch (Exception ex)
             {
-                StatusMessage = $"実行エラー: {ex.Message}";
+                UpdateStatusMessage("StatusExecutionError", ex.Message);
                 MessageBox.Show($"実行エラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
@@ -1223,7 +1223,7 @@ namespace UsbI2cController.ViewModels
                     });
 
                     File.WriteAllText(saveFileDialog.FileName, json);
-                    StatusMessage = $"シーケンスを保存しました: {Path.GetFileName(saveFileDialog.FileName)}";
+                    UpdateStatusMessage("StatusSequenceSaved", Path.GetFileName(saveFileDialog.FileName));
                 }
             }
             catch (Exception ex)

@@ -101,6 +101,18 @@
     <sys:String x:Key="StatusAddressSelected">I2C address {0} selected</sys:String>
     <sys:String x:Key="StatusSequenceLoaded">Sequence loaded: {0} ({1} operations)</sys:String>
     <sys:String x:Key="StatusOperationEdited">Operation edited</sys:String>
+    <sys:String x:Key="StatusWriteSuccess">Write success: {0} bytes @ 0x{1:X2}</sys:String>
+    <sys:String x:Key="StatusWriteFailed">Write failed</sys:String>
+    <sys:String x:Key="StatusWriteError">Write error: {0}</sys:String>
+    <sys:String x:Key="StatusReadSuccess">Read success: {0} bytes @ 0x{1:X2}</sys:String>
+    <sys:String x:Key="StatusReadFailed">Read failed</sys:String>
+    <sys:String x:Key="StatusReadError">Read error: {0}</sys:String>
+    <sys:String x:Key="StatusHistoryCleared">History cleared</sys:String>
+    <sys:String x:Key="StatusSequenceSuccess">Sequence executed successfully: {0} operations completed</sys:String>
+    <sys:String x:Key="StatusSequenceFailed">Sequence execution failed</sys:String>
+    <sys:String x:Key="StatusExecutionError">Execution error: {0}</sys:String>
+    <sys:String x:Key="StatusSequenceSaved">Sequence saved: {0}</sys:String>
+    <sys:String x:Key="StatusSequenceRestored">Previous command sequence restored ({0} operations)</sys:String>
     
     <!-- Device Status -->
     <sys:String x:Key="DeviceStatusNotConnected">Not Connected</sys:String>

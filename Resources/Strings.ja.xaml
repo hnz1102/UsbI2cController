@@ -101,6 +101,18 @@
     <sys:String x:Key="StatusAddressSelected">I2Cアドレス {0} を選択しました</sys:String>
     <sys:String x:Key="StatusSequenceLoaded">シーケンスを読み込みました: {0} ({1} 操作)</sys:String>
     <sys:String x:Key="StatusOperationEdited">操作を編集しました</sys:String>
+    <sys:String x:Key="StatusWriteSuccess">書き込み成功: {0}バイト @ 0x{1:X2}</sys:String>
+    <sys:String x:Key="StatusWriteFailed">書き込み失敗</sys:String>
+    <sys:String x:Key="StatusWriteError">書き込みエラー: {0}</sys:String>
+    <sys:String x:Key="StatusReadSuccess">読み込み成功: {0}バイト @ 0x{1:X2}</sys:String>
+    <sys:String x:Key="StatusReadFailed">読み込み失敗</sys:String>
+    <sys:String x:Key="StatusReadError">読み込みエラー: {0}</sys:String>
+    <sys:String x:Key="StatusHistoryCleared">履歴をクリアしました</sys:String>
+    <sys:String x:Key="StatusSequenceSuccess">シーケンス実行成功: {0} 操作完了</sys:String>
+    <sys:String x:Key="StatusSequenceFailed">シーケンス実行失敗</sys:String>
+    <sys:String x:Key="StatusExecutionError">実行エラー: {0}</sys:String>
+    <sys:String x:Key="StatusSequenceSaved">シーケンスを保存しました: {0}</sys:String>
+    <sys:String x:Key="StatusSequenceRestored">前回のコマンドシーケンスを復元しました ({0} 操作)</sys:String>
     
     <!-- Device Status -->
     <sys:String x:Key="DeviceStatusNotConnected">未接続</sys:String>
