@@ -1,0 +1,137 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    
+    <!-- Window -->
+    <sys:String x:Key="WindowTitle">USB-I2C コントローラー</sys:String>
+    
+    <!-- Device Section -->
+    <sys:String x:Key="DeviceSection">デバイス</sys:String>
+    <sys:String x:Key="SelectDevice">デバイス選択:</sys:String>
+    <sys:String x:Key="RefreshDevices">更新</sys:String>
+    <sys:String x:Key="ConnectDevice">接続</sys:String>
+    <sys:String x:Key="DisconnectDevice">切断</sys:String>
+    
+    <!-- Settings Section -->
+    <sys:String x:Key="SettingsSection">設定</sys:String>
+    <sys:String x:Key="ClockSpeed">クロック速度:</sys:String>
+    <sys:String x:Key="ClockSpeed100kHz">100 kHz</sys:String>
+    <sys:String x:Key="ClockSpeed400kHz">400 kHz</sys:String>
+    <sys:String x:Key="ClockEdge">クロックエッジ:</sys:String>
+    <sys:String x:Key="ClockEdgeNegative">Negative (推奨)</sys:String>
+    <sys:String x:Key="ClockEdgePositive">Positive</sys:String>
+    <sys:String x:Key="Language">言語:</sys:String>
+    
+    <!-- Command Sequence Section -->
+    <sys:String x:Key="CommandSequenceSection">コマンドシーケンス</sys:String>
+    <sys:String x:Key="AddWriteOperation">Write追加</sys:String>
+    <sys:String x:Key="AddReadOperation">Read追加</sys:String>
+    <sys:String x:Key="ExecuteSequence">実行</sys:String>
+    <sys:String x:Key="ClearSequence">クリア</sys:String>
+    <sys:String x:Key="SaveSequence">保存</sys:String>
+    <sys:String x:Key="LoadSequence">読込</sys:String>
+    
+    <!-- Operation Columns -->
+    <sys:String x:Key="ColumnType">種別</sys:String>
+    <sys:String x:Key="ColumnAddress">アドレス</sys:String>
+    <sys:String x:Key="ColumnData">データ/長さ</sys:String>
+    <sys:String x:Key="ColumnResult">結果</sys:String>
+    <sys:String x:Key="ColumnActions">操作</sys:String>
+    
+    <!-- Transaction History Section -->
+    <sys:String x:Key="TransactionHistorySection">トランザクション履歴</sys:String>
+    <sys:String x:Key="ClearHistory">履歴クリア</sys:String>
+    <sys:String x:Key="ToggleDebugLog">デバッグログ</sys:String>
+    
+    <!-- Transaction Columns -->
+    <sys:String x:Key="ColumnTime">時刻</sys:String>
+    <sys:String x:Key="ColumnTransactionType">タイプ</sys:String>
+    <sys:String x:Key="ColumnDeviceAddress">アドレス</sys:String>
+    <sys:String x:Key="ColumnDataHex">データ (HEX)</sys:String>
+    <sys:String x:Key="ColumnDataDec">データ (DEC)</sys:String>
+    <sys:String x:Key="ColumnStatus">状態</sys:String>
+    
+    <!-- Dialog -->
+    <sys:String x:Key="WriteDataInput">Write データ入力</sys:String>
+    <sys:String x:Key="WriteDataPrompt">データ (HEX: 0x1A 0x2B / DEC: 26 43):</sys:String>
+    <sys:String x:Key="ReadLengthInput">Read バイト数入力</sys:String>
+    <sys:String x:Key="ReadLengthPrompt">読み込みバイト数 (1-256):</sys:String>
+    <sys:String x:Key="CommentInput">コメント</sys:String>
+    <sys:String x:Key="CommentPrompt">コマンドの説明やメモを入力してください（省略可）:</sys:String>
+    <sys:String x:Key="EditOperationMessage">コマンドの内容とコメントを編集します:</sys:String>
+    <sys:String x:Key="OK">OK</sys:String>
+    <sys:String x:Key="Cancel">キャンセル</sys:String>
+    
+    <!-- Messages -->
+    <sys:String x:Key="PleaseConnectDevice">デバイスに接続してください</sys:String>
+    <sys:String x:Key="NoOperations">実行する操作がありません</sys:String>
+    <sys:String x:Key="SaveSequenceTitle">シーケンス保存</sys:String>
+    <sys:String x:Key="LoadSequenceTitle">シーケンス読込</sys:String>
+    <sys:String x:Key="SequenceFiles">シーケンスファイル</sys:String>
+    <sys:String x:Key="AllFiles">すべてのファイル</sys:String>
+    
+    <!-- Additional UI -->
+    <sys:String x:Key="AppSubtitle">FT232H による I2C 通信制御</sys:String>
+    <sys:String x:Key="I2CAddressScan">I2C アドレススキャン</sys:String>
+    <sys:String x:Key="StartScan">スキャン開始</sys:String>
+    <sys:String x:Key="DebugLog">デバッグログ</sys:String>
+    <sys:String x:Key="ClearLog">ログクリア</sys:String>
+    <sys:String x:Key="I2CAddressHint">I2C アドレス (例: 0x50)</sys:String>
+    <sys:String x:Key="SequenceDescription">操作を追加してI2Cコマンドシーケンスを構築します</sys:String>
+    
+    <!-- Status Messages -->
+    <sys:String x:Key="StatusReady">準備完了</sys:String>
+    <sys:String x:Key="StatusDebugLogVisible">デバッグログを表示</sys:String>
+    <sys:String x:Key="StatusDebugLogHidden">デバッグログを非表示</sys:String>
+    <sys:String x:Key="StatusClockSpeed100kHz">I2Cクロック速度: 100kHz</sys:String>
+    <sys:String x:Key="StatusClockSpeed400kHz">I2Cクロック速度: 400kHz</sys:String>
+    <sys:String x:Key="StatusClockEdgeNegative">I2Cクロックエッジ: Negative (High→Low)</sys:String>
+    <sys:String x:Key="StatusClockEdgePositive">I2Cクロックエッジ: Positive (Low→High)</sys:String>
+    <sys:String x:Key="StatusDevicesFound">{0}台のデバイスが見つかりました</sys:String>
+    <sys:String x:Key="StatusNoDeviceFound">FT232Hデバイスが見つかりません</sys:String>
+    <sys:String x:Key="StatusDeviceSearchError">デバイス検索エラー: {0}</sys:String>
+    <sys:String x:Key="StatusConnected">デバイス #{0} ({1}) に接続しました</sys:String>
+    <sys:String x:Key="StatusInitFailed">デバイスの初期化に失敗しました</sys:String>
+    <sys:String x:Key="StatusConnectionError">接続エラー: {0}</sys:String>
+    <sys:String x:Key="StatusDisconnected">デバイスから切断しました</sys:String>
+    <sys:String x:Key="StatusScanning">I2Cアドレスをスキャン中...</sys:String>
+    <sys:String x:Key="StatusDevicesDetected">I2Cデバイスを {0} 個検出しました</sys:String>
+    <sys:String x:Key="StatusNoDeviceDetected">I2Cデバイスが見つかりませんでした</sys:String>
+    <sys:String x:Key="StatusScanError">スキャンエラー: {0}</sys:String>
+    <sys:String x:Key="StatusAddressSelected">I2Cアドレス {0} を選択しました</sys:String>
+    <sys:String x:Key="StatusSequenceLoaded">シーケンスを読み込みました: {0} ({1} 操作)</sys:String>
+    <sys:String x:Key="StatusOperationEdited">操作を編集しました</sys:String>
+    
+    <!-- Device Status -->
+    <sys:String x:Key="DeviceStatusNotConnected">未接続</sys:String>
+    <sys:String x:Key="DeviceStatusDetected">{0}台検出</sys:String>
+    <sys:String x:Key="DeviceStatusNone">デバイスなし</sys:String>
+    <sys:String x:Key="DeviceStatusConnected">接続済み [#{0}]</sys:String>
+    <sys:String x:Key="DeviceStatusConnectFailed">接続失敗</sys:String>
+    <sys:String x:Key="DeviceStatusError">エラー</sys:String>
+    <sys:String x:Key="DeviceStatusDisconnected">切断済み</sys:String>
+    
+    <!-- Tooltips -->
+    <sys:String x:Key="ConnectDeviceTooltip">選択したデバイスに接続</sys:String>
+    <sys:String x:Key="DisconnectDeviceTooltip">デバイスから切断</sys:String>
+    <sys:String x:Key="GPIOTestTooltip">GPIOテストを実行</sys:String>
+    <sys:String x:Key="ClockEdgeNegativeTooltip">0x11: I2C標準 - SDA変化=SCL Low時, サンプリング=SCL High時</sys:String>
+    <sys:String x:Key="ClockEdgePositiveTooltip">0x10: 非標準 - デバッグ用</sys:String>
+    <sys:String x:Key="ToggleDebugLogTooltip">デバッグログの表示/非表示を切り替え</sys:String>
+    <sys:String x:Key="RefreshDevicesTooltip">デバイスリストを更新</sys:String>
+    <sys:String x:Key="StartScanTooltip">I2Cアドレスをスキャンして接続されているデバイスを検出</sys:String>
+    <sys:String x:Key="SelectAddressTooltip">クリックしてこのアドレスを選択</sys:String>
+    <sys:String x:Key="AddWriteTooltip">Writeコマンドを追加</sys:String>
+    <sys:String x:Key="AddReadTooltip">Readコマンドを追加</sys:String>
+    <sys:String x:Key="ClearSequenceTooltip">すべてのコマンドをクリア</sys:String>
+    <sys:String x:Key="ExecuteSequenceTooltip">コマンドシーケンスを実行</sys:String>
+    <sys:String x:Key="MoveUpTooltip">上に移動</sys:String>
+    <sys:String x:Key="MoveDownTooltip">下に移動</sys:String>
+    <sys:String x:Key="DeleteTooltip">削除</sys:String>
+    <sys:String x:Key="SaveSequenceTooltip">シーケンスをファイルに保存</sys:String>
+    <sys:String x:Key="LoadSequenceTooltip">保存したシーケンスを読み込み</sys:String>
+    <sys:String x:Key="ClearHistoryTooltip">トランザクション履歴をクリア</sys:String>
+    <sys:String x:Key="ClearLogTooltip">デバッグログをクリア</sys:String>
+    <sys:String x:Key="EditOperationTooltip">クリックして操作を編集</sys:String>
+    
+</ResourceDictionary>

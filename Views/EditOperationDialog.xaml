@@ -1,0 +1,65 @@
+<Window x:Class="UsbI2cController.Views.EditOperationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="{Binding Title}" 
+        Height="350" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- メッセージ -->
+        <TextBlock Grid.Row="0" 
+                   Text="{Binding Message}"
+                   TextWrapping="Wrap"
+                   Style="{StaticResource MaterialDesignBody1TextBlock}"/>
+
+        <!-- データ/長さ入力 -->
+        <TextBox Grid.Row="2"
+                 materialDesign:HintAssist.Hint="{Binding InputHint}"
+                 Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Visibility="{Binding ShowDataInput, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+        <!-- コメント入力 -->
+        <TextBox Grid.Row="4"
+                 materialDesign:HintAssist.Hint="{Binding CommentHint}"
+                 Text="{Binding CommentText, UpdateSourceTrigger=PropertyChanged}"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 MinLines="3"
+                 MaxLines="6"
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+        <!-- ボタン -->
+        <StackPanel Grid.Row="7" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right">
+            <Button Content="{DynamicResource OK}"
+                    IsDefault="True"
+                    Click="OkButton_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Width="100"
+                    Margin="0,0,8,0"/>
+            <Button Content="{DynamicResource Cancel}"
+                    IsCancel="True"
+                    Click="CancelButton_Click"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Width="100"/>
+        </StackPanel>
+    </Grid>
+</Window>

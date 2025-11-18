@@ -1,0 +1,632 @@
+﻿<Window x:Class="UsbI2cController.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UsbI2cController"
+        xmlns:converters="clr-namespace:UsbI2cController.Converters"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="{DynamicResource WindowTitle}" 
+        Height="700" Width="1000"
+        Icon="app.ico"
+        Background="{DynamicResource MaterialDesign.Brush.Background}"
+        FontFamily="{DynamicResource MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <converters:DebugLogIconConverter x:Key="DebugLogIconConverter"/>
+    </Window.Resources>
+    
+    <materialDesign:DialogHost>
+        <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ヘッダー -->
+            <materialDesign:Card Grid.Row="0" Padding="16" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- タイトル行 -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="USB I2C Controller" 
+                                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"/>
+                            <TextBlock Text="{DynamicResource AppSubtitle}" 
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"
+                                       Opacity="0.7"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <materialDesign:Chip Content="{Binding DeviceStatus}"
+                                               IconBackground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                               IconForeground="White"
+                                               Margin="0,0,8,0">
+                                <materialDesign:Chip.Icon>
+                                    <materialDesign:PackIcon Kind="Usb"/>
+                                </materialDesign:Chip.Icon>
+                            </materialDesign:Chip>
+                            
+                            <Button Content="{DynamicResource ConnectDevice}" 
+                                    Command="{Binding ConnectCommand}"
+                                    IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    ToolTip="{DynamicResource ConnectDeviceTooltip}"
+                                    Margin="0,0,8,0"/>
+                            
+                            <Button Content="{DynamicResource DisconnectDevice}" 
+                                    Command="{Binding DisconnectCommand}"
+                                    IsEnabled="{Binding IsConnected}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    ToolTip="{DynamicResource DisconnectDeviceTooltip}"
+                                    Margin="0,0,8,0"/>
+                            
+                            <Button Command="{Binding ToggleDebugLogCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,8,0"
+                                    ToolTip="{DynamicResource ToggleDebugLogTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="{Binding IsDebugLogVisible, Converter={StaticResource DebugLogIconConverter}}" 
+                                                           VerticalAlignment="Center" 
+                                                           Margin="0,0,4,0"/>
+                                    <TextBlock Text="Debug" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Content="GPIO Test" 
+                                    Command="{Binding TestGPIOCommand}"
+                                    IsEnabled="{Binding IsConnected}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    ToolTip="{DynamicResource GPIOTestTooltip}"
+                                    Margin="0,0,8,0"/>
+                            
+                            <TextBlock Text="I2C Clock:" 
+                                       VerticalAlignment="Center" 
+                                       Margin="8,0,8,0"/>
+                            
+                            <RadioButton Content="100kHz" 
+                                       IsChecked="{Binding IsClockSpeed100kHz}"
+                                       Command="{Binding SetClockSpeed100kHzCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       Margin="0,0,4,0"/>
+                            
+                            <RadioButton Content="400kHz" 
+                                       IsChecked="{Binding IsClockSpeed400kHz}"
+                                       Command="{Binding SetClockSpeed400kHzCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       Margin="0,0,16,0"/>
+                            
+                            <TextBlock Text="Clock Edge:" 
+                                       VerticalAlignment="Center" 
+                                       Margin="8,0,8,0"/>
+                            
+                            <RadioButton Content="{DynamicResource ClockEdgeNegative}" 
+                                       IsChecked="{Binding IsClockEdgeNegative}"
+                                       Command="{Binding SetClockEdgeNegativeCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       ToolTip="{DynamicResource ClockEdgeNegativeTooltip}"
+                                       Margin="0,0,4,0"/>
+                            
+                            <RadioButton Content="Positive" 
+                                       IsChecked="{Binding IsClockEdgePositive}"
+                                       Command="{Binding SetClockEdgePositiveCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       ToolTip="{DynamicResource ClockEdgePositiveTooltip}"
+                                       Margin="0,0,16,0"/>
+                            
+                            <TextBlock Text="{DynamicResource Language}" 
+                                       VerticalAlignment="Center" 
+                                       Margin="8,0,8,0"/>
+                            
+                            <ComboBox SelectedValue="{Binding CurrentLanguage}"
+                                      SelectedValuePath="Tag"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      MinWidth="80">
+                                <ComboBoxItem Content="日本語" Tag="ja"/>
+                                <ComboBoxItem Content="English" Tag="en"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- デバイス選択行 -->
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <ComboBox Grid.Column="0"
+                                  materialDesign:HintAssist.Hint="{DynamicResource SelectDevice}"
+                                  ItemsSource="{Binding AvailableDevices}"
+                                  SelectedItem="{Binding SelectedDevice}"
+                                  DisplayMemberPath="DisplayName"
+                                  IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                  Margin="0,0,8,0"/>
+                        
+                        <Button Grid.Column="1"
+                                Command="{Binding RefreshDeviceListCommand}"
+                                IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="{DynamicResource RefreshDevicesTooltip}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Refresh" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock Text="{DynamicResource RefreshDevices}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- コントロールエリア -->
+            <Grid Grid.Row="1" Margin="0,0,0,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- I2Cアドレススキャンセクション -->
+                <materialDesign:Card Grid.Row="0" Padding="16" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0" 
+                                       Text="{DynamicResource I2CAddressScan}" 
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,16,0"/>
+                            
+                            <ProgressBar Grid.Column="1"
+                                        Value="{Binding ScanProgress}"
+                                        Minimum="0"
+                                        Maximum="100"
+                                        Height="4"
+                                        VerticalAlignment="Center"
+                                        Visibility="{Binding IsScanning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            
+                            <Button Grid.Column="2"
+                                    Command="{Binding ScanI2CAddressesCommand}"
+                                    IsEnabled="{Binding IsConnected}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    ToolTip="{DynamicResource StartScanTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Magnify" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{DynamicResource StartScan}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        
+                        <ItemsControl Grid.Row="1" 
+                                     ItemsSource="{Binding FoundI2CAddresses}"
+                                     Margin="0,16,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding}"
+                                           Command="{Binding DataContext.SelectI2CAddressCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                           CommandParameter="{Binding}"
+                                           Style="{StaticResource MaterialDesignOutlinedButton}"
+                                           Margin="0,0,8,8"
+                                           ToolTip="{DynamicResource SelectAddressTooltip}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- コマンドシーケンスビルダー -->
+                <materialDesign:Card Grid.Row="1" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- ヘッダー -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0"
+                                       Text="{DynamicResource CommandSequenceSection}" 
+                                       Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                       VerticalAlignment="Center"/>
+                            
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <RadioButton Content="HEX" 
+                                           IsChecked="{Binding IsHexMode}"
+                                           Command="{Binding SwitchToHexCommand}"
+                                           Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                           Margin="0,0,4,0"/>
+                                <RadioButton Content="DEC" 
+                                           IsChecked="{Binding IsDecMode}"
+                                           Command="{Binding SwitchToDecCommand}"
+                                           Style="{StaticResource MaterialDesignChoiceChipRadioButton}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- I2Cアドレス入力 -->
+                        <Grid Grid.Row="1" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBox Grid.Column="0"
+                                     materialDesign:HintAssist.Hint="{DynamicResource I2CAddressHint}"
+                                     Text="{Binding I2cAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            
+                            <TextBlock Grid.Column="2"
+                                       Text="{DynamicResource SequenceDescription}"
+                                       VerticalAlignment="Center"
+                                       Opacity="0.7"
+                                       Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+                        </Grid>
+
+                        <!-- 操作リスト -->
+                        <Border Grid.Row="2" 
+                                BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                MinHeight="200"
+                                MaxHeight="400"
+                                Margin="0,0,0,16">
+                            <Grid>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled">
+                                    <ItemsControl ItemsSource="{Binding CommandOperations}" Margin="8">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{DynamicResource MaterialDesignDivider}"
+                                                        BorderThickness="0,0,0,1"
+                                                        Padding="8"
+                                                        Margin="0,0,0,4">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="120"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        
+                                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                                            <Button Command="{Binding DataContext.MoveUpOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Width="24"
+                                                                    Height="24"
+                                                                    ToolTip="{DynamicResource MoveUpTooltip}">
+                                                                <materialDesign:PackIcon Kind="ArrowUp" Width="16" Height="16"/>
+                                                            </Button>
+                                                            <Button Command="{Binding DataContext.MoveDownOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    Style="{StaticResource MaterialDesignIconButton}"
+                                                                    Width="24"
+                                                                    Height="24"
+                                                                    ToolTip="{DynamicResource MoveDownTooltip}">
+                                                                <materialDesign:PackIcon Kind="ArrowDown" Width="16" Height="16"/>
+                                                            </Button>
+                                                        </StackPanel>
+                                                        
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding Index}"
+                                                                   FontWeight="Bold"
+                                                                   Margin="0,0,8,0"
+                                                                   VerticalAlignment="Center"/>
+                                                        
+                                                        <materialDesign:Chip Grid.Column="2"
+                                                                           Content="{Binding TypeDisplay}"
+                                                                           Margin="0,0,8,0"/>
+                                                        
+                                                <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                                    <Button Command="{Binding DataContext.EditOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            HorizontalAlignment="Stretch"
+                                                            HorizontalContentAlignment="Left"
+                                                            Padding="8,4"
+                                                            ToolTip="{DynamicResource EditOperationTooltip}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Description}"
+                                                                       TextWrapping="Wrap"
+                                                                       VerticalAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Comment, StringFormat=' [{0}]'}"
+                                                                       TextWrapping="Wrap"
+                                                                       FontStyle="Italic"
+                                                                       Foreground="{DynamicResource MaterialDesign.Brush.Primary}"
+                                                                       VerticalAlignment="Center"
+                                                                       Visibility="{Binding Comment, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Border Background="{DynamicResource MaterialDesign.Brush.Primary.Light}"
+                                                            CornerRadius="4"
+                                                            Padding="8,4"
+                                                            Margin="0,4,0,0"
+                                                            Visibility="{Binding HasReadResult, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="ArrowRight" 
+                                                                                   VerticalAlignment="Center"
+                                                                                   Margin="0,0,4,0"
+                                                                                   Foreground="White"/>
+                                                            <TextBlock Text="{Binding ReadResultText}"
+                                                                       FontFamily="Consolas"
+                                                                       FontWeight="Bold"
+                                                                       Foreground="White"
+                                                                       TextWrapping="Wrap"
+                                                                       VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </StackPanel>                                                        <Button Grid.Column="4"
+                                                                Command="{Binding DataContext.RemoveOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                Style="{StaticResource MaterialDesignIconButton}"
+                                                                ToolTip="{DynamicResource DeleteTooltip}">
+                                                            <materialDesign:PackIcon Kind="Delete"/>
+                                                        </Button>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                
+                                <TextBlock Text="{DynamicResource NoOperations}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Opacity="0.5"
+                                           Visibility="{Binding HasNoOperations, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- 操作追加ボタン（上段） -->
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Button Grid.Column="0"
+                                    Command="{Binding AddWriteOperationCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    ToolTip="{DynamicResource AddWriteTooltip}"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Write" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Grid.Column="2"
+                                    Command="{Binding AddReadOperationCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    ToolTip="{DynamicResource AddReadTooltip}"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Read" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Grid.Column="4"
+                                    Command="{Binding ClearOperationsCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    ToolTip="{DynamicResource ClearSequenceTooltip}"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Close" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{DynamicResource ClearSequence}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Grid.Column="6"
+                                    Command="{Binding ExecuteSequenceCommand}"
+                                    IsEnabled="{Binding IsConnected}"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    ToolTip="{DynamicResource ExecuteSequenceTooltip}"
+                                    Height="40"
+                                    Padding="24,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Play" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{DynamicResource ExecuteSequence}" VerticalAlignment="Center" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        
+                        <!-- ファイル操作ボタン（下段） -->
+                        <Grid Grid.Row="4" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Button Grid.Column="0"
+                                    Command="{Binding SaveSequenceToFileCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="40"
+                                    ToolTip="{DynamicResource SaveSequenceTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ContentSave" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{DynamicResource SaveSequence}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Grid.Column="2"
+                                    Command="{Binding LoadSequenceFromFileCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Height="40"
+                                    ToolTip="{DynamicResource LoadSequenceTooltip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FolderOpen" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{DynamicResource LoadSequence}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+            </Grid>
+
+            <!-- 履歴表示 -->
+            <materialDesign:Card Grid.Row="2" Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="150"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock Text="{DynamicResource TransactionHistorySection}" 
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   VerticalAlignment="Center"/>
+                        
+                        <Button Content="{DynamicResource ClearHistory}"
+                                Command="{Binding ClearHistoryCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="{DynamicResource ClearHistoryTooltip}"
+                                HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <ListView Grid.Row="1" 
+                              ItemsSource="{Binding TransactionHistory}"
+                              Style="{StaticResource MaterialDesignListView}"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.Resources>
+                            <Style TargetType="GridViewColumnHeader">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                                <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                            </Style>
+                        </ListView.Resources>
+                        <ListView.View>
+                            <GridView AllowsColumnReorder="True">
+                                <GridViewColumn Header="{DynamicResource ColumnTime}" Width="120" DisplayMemberBinding="{Binding Timestamp, StringFormat=HH:mm:ss.fff}"/>
+                                <GridViewColumn Header="{DynamicResource ColumnTransactionType}" Width="100" DisplayMemberBinding="{Binding Type}"/>
+                                <GridViewColumn Header="{DynamicResource ColumnDeviceAddress}" Width="100">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DeviceAddress, StringFormat=0x{0:X2}}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="{DynamicResource ColumnDataHex}" Width="300" DisplayMemberBinding="{Binding DataAsHex}"/>
+                                <GridViewColumn Header="{DynamicResource ColumnDataDec}" Width="200" DisplayMemberBinding="{Binding DataAsDec}"/>
+                                <GridViewColumn Header="{DynamicResource ColumnStatus}" Width="80">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <materialDesign:PackIcon Kind="{Binding Success, Converter={StaticResource SuccessIconConverter}}"
+                                                                   Foreground="{Binding Success, Converter={StaticResource SuccessColorConverter}}"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    
+                    <!-- デバッグログセクション -->
+                    <Grid Grid.Row="2" 
+                          Margin="0,16,0,8"
+                          Visibility="{Binding IsDebugLogVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{DynamicResource DebugLog}" 
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   VerticalAlignment="Center"/>
+                        
+                        <Button Content="{DynamicResource ClearLog}"
+                                Command="{Binding ClearLogCommand}"
+                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                ToolTip="{DynamicResource ClearLogTooltip}"
+                                HorizontalAlignment="Right"/>
+                    </Grid>
+
+                    <Border Grid.Row="3" 
+                            BorderBrush="{DynamicResource MaterialDesignDivider}"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Visibility="{Binding IsDebugLogVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                                      HorizontalScrollBarVisibility="Auto">
+                            <TextBox Text="{Binding DebugLog, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     FontFamily="Consolas"
+                                     FontSize="10"
+                                     Padding="8"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- ステータスバー -->
+            <materialDesign:Card Grid.Row="3" Padding="8" Margin="0,16,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <materialDesign:PackIcon Grid.Column="0" 
+                                           Kind="InformationOutline" 
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                    
+                    <TextBlock Grid.Column="1" 
+                               Text="{Binding StatusMessage}" 
+                               VerticalAlignment="Center"
+                               Style="{StaticResource MaterialDesignBody2TextBlock}"/>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
+    </materialDesign:DialogHost>
+</Window>

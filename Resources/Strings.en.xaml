@@ -1,0 +1,137 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    
+    <!-- Window -->
+    <sys:String x:Key="WindowTitle">USB-I2C Controller</sys:String>
+    
+    <!-- Device Section -->
+    <sys:String x:Key="DeviceSection">Device</sys:String>
+    <sys:String x:Key="SelectDevice">Select Device:</sys:String>
+    <sys:String x:Key="RefreshDevices">Refresh</sys:String>
+    <sys:String x:Key="ConnectDevice">Connect</sys:String>
+    <sys:String x:Key="DisconnectDevice">Disconnect</sys:String>
+    
+    <!-- Settings Section -->
+    <sys:String x:Key="SettingsSection">Settings</sys:String>
+    <sys:String x:Key="ClockSpeed">Clock Speed:</sys:String>
+    <sys:String x:Key="ClockSpeed100kHz">100 kHz</sys:String>
+    <sys:String x:Key="ClockSpeed400kHz">400 kHz</sys:String>
+    <sys:String x:Key="ClockEdge">Clock Edge:</sys:String>
+    <sys:String x:Key="ClockEdgeNegative">Negative (Recommended)</sys:String>
+    <sys:String x:Key="ClockEdgePositive">Positive</sys:String>
+    <sys:String x:Key="Language">Language:</sys:String>
+    
+    <!-- Command Sequence Section -->
+    <sys:String x:Key="CommandSequenceSection">Command Sequence</sys:String>
+    <sys:String x:Key="AddWriteOperation">Add Write</sys:String>
+    <sys:String x:Key="AddReadOperation">Add Read</sys:String>
+    <sys:String x:Key="ExecuteSequence">Execute</sys:String>
+    <sys:String x:Key="ClearSequence">Clear</sys:String>
+    <sys:String x:Key="SaveSequence">Save</sys:String>
+    <sys:String x:Key="LoadSequence">Load</sys:String>
+    
+    <!-- Operation Columns -->
+    <sys:String x:Key="ColumnType">Type</sys:String>
+    <sys:String x:Key="ColumnAddress">Address</sys:String>
+    <sys:String x:Key="ColumnData">Data/Length</sys:String>
+    <sys:String x:Key="ColumnResult">Result</sys:String>
+    <sys:String x:Key="ColumnActions">Actions</sys:String>
+    
+    <!-- Transaction History Section -->
+    <sys:String x:Key="TransactionHistorySection">Transaction History</sys:String>
+    <sys:String x:Key="ClearHistory">Clear History</sys:String>
+    <sys:String x:Key="ToggleDebugLog">Debug Log</sys:String>
+    
+    <!-- Transaction Columns -->
+    <sys:String x:Key="ColumnTime">Time</sys:String>
+    <sys:String x:Key="ColumnTransactionType">Type</sys:String>
+    <sys:String x:Key="ColumnDeviceAddress">Address</sys:String>
+    <sys:String x:Key="ColumnDataHex">Data (HEX)</sys:String>
+    <sys:String x:Key="ColumnDataDec">Data (DEC)</sys:String>
+    <sys:String x:Key="ColumnStatus">Status</sys:String>
+    
+    <!-- Dialog -->
+    <sys:String x:Key="WriteDataInput">Write Data Input</sys:String>
+    <sys:String x:Key="WriteDataPrompt">Data (HEX: 0x1A 0x2B / DEC: 26 43):</sys:String>
+    <sys:String x:Key="ReadLengthInput">Read Length Input</sys:String>
+    <sys:String x:Key="ReadLengthPrompt">Read length (1-256):</sys:String>
+    <sys:String x:Key="CommentInput">Comment</sys:String>
+    <sys:String x:Key="CommentPrompt">Enter a description or note for this command (optional):</sys:String>
+    <sys:String x:Key="EditOperationMessage">Edit command data and comment:</sys:String>
+    <sys:String x:Key="OK">OK</sys:String>
+    <sys:String x:Key="Cancel">Cancel</sys:String>
+    
+    <!-- Messages -->
+    <sys:String x:Key="PleaseConnectDevice">Please connect to a device</sys:String>
+    <sys:String x:Key="NoOperations">No operations to execute</sys:String>
+    <sys:String x:Key="SaveSequenceTitle">Save Sequence</sys:String>
+    <sys:String x:Key="LoadSequenceTitle">Load Sequence</sys:String>
+    <sys:String x:Key="SequenceFiles">Sequence Files</sys:String>
+    <sys:String x:Key="AllFiles">All Files</sys:String>
+    
+    <!-- Additional UI -->
+    <sys:String x:Key="AppSubtitle">I2C Communication Control via FT232H</sys:String>
+    <sys:String x:Key="I2CAddressScan">I2C Address Scan</sys:String>
+    <sys:String x:Key="StartScan">Start Scan</sys:String>
+    <sys:String x:Key="DebugLog">Debug Log</sys:String>
+    <sys:String x:Key="ClearLog">Clear Log</sys:String>
+    <sys:String x:Key="I2CAddressHint">I2C Address (e.g., 0x50)</sys:String>
+    <sys:String x:Key="SequenceDescription">Build I2C command sequence by adding operations</sys:String>
+    
+    <!-- Status Messages -->
+    <sys:String x:Key="StatusReady">Ready</sys:String>
+    <sys:String x:Key="StatusDebugLogVisible">Debug log shown</sys:String>
+    <sys:String x:Key="StatusDebugLogHidden">Debug log hidden</sys:String>
+    <sys:String x:Key="StatusClockSpeed100kHz">I2C Clock Speed: 100kHz</sys:String>
+    <sys:String x:Key="StatusClockSpeed400kHz">I2C Clock Speed: 400kHz</sys:String>
+    <sys:String x:Key="StatusClockEdgeNegative">I2C Clock Edge: Negative (High→Low)</sys:String>
+    <sys:String x:Key="StatusClockEdgePositive">I2C Clock Edge: Positive (Low→High)</sys:String>
+    <sys:String x:Key="StatusDevicesFound">{0} device(s) found</sys:String>
+    <sys:String x:Key="StatusNoDeviceFound">FT232H device not found</sys:String>
+    <sys:String x:Key="StatusDeviceSearchError">Device search error: {0}</sys:String>
+    <sys:String x:Key="StatusConnected">Connected to device #{0} ({1})</sys:String>
+    <sys:String x:Key="StatusInitFailed">Device initialization failed</sys:String>
+    <sys:String x:Key="StatusConnectionError">Connection error: {0}</sys:String>
+    <sys:String x:Key="StatusDisconnected">Disconnected from device</sys:String>
+    <sys:String x:Key="StatusScanning">Scanning I2C addresses...</sys:String>
+    <sys:String x:Key="StatusDevicesDetected">{0} I2C device(s) detected</sys:String>
+    <sys:String x:Key="StatusNoDeviceDetected">No I2C devices found</sys:String>
+    <sys:String x:Key="StatusScanError">Scan error: {0}</sys:String>
+    <sys:String x:Key="StatusAddressSelected">I2C address {0} selected</sys:String>
+    <sys:String x:Key="StatusSequenceLoaded">Sequence loaded: {0} ({1} operations)</sys:String>
+    <sys:String x:Key="StatusOperationEdited">Operation edited</sys:String>
+    
+    <!-- Device Status -->
+    <sys:String x:Key="DeviceStatusNotConnected">Not Connected</sys:String>
+    <sys:String x:Key="DeviceStatusDetected">{0} Detected</sys:String>
+    <sys:String x:Key="DeviceStatusNone">No Device</sys:String>
+    <sys:String x:Key="DeviceStatusConnected">Connected [#{0}]</sys:String>
+    <sys:String x:Key="DeviceStatusConnectFailed">Connection Failed</sys:String>
+    <sys:String x:Key="DeviceStatusError">Error</sys:String>
+    <sys:String x:Key="DeviceStatusDisconnected">Disconnected</sys:String>
+    
+    <!-- Tooltips -->
+    <sys:String x:Key="ConnectDeviceTooltip">Connect to the selected device</sys:String>
+    <sys:String x:Key="DisconnectDeviceTooltip">Disconnect from device</sys:String>
+    <sys:String x:Key="GPIOTestTooltip">Run GPIO test</sys:String>
+    <sys:String x:Key="ClockEdgeNegativeTooltip">0x11: I2C Standard - SDA changes on SCL Low, sampled on SCL High</sys:String>
+    <sys:String x:Key="ClockEdgePositiveTooltip">0x10: Non-standard - For debugging</sys:String>
+    <sys:String x:Key="ToggleDebugLogTooltip">Toggle debug log visibility</sys:String>
+    <sys:String x:Key="RefreshDevicesTooltip">Refresh device list</sys:String>
+    <sys:String x:Key="StartScanTooltip">Scan I2C addresses to detect connected devices</sys:String>
+    <sys:String x:Key="SelectAddressTooltip">Click to select this address</sys:String>
+    <sys:String x:Key="AddWriteTooltip">Add Write command</sys:String>
+    <sys:String x:Key="AddReadTooltip">Add Read command</sys:String>
+    <sys:String x:Key="ClearSequenceTooltip">Clear all commands</sys:String>
+    <sys:String x:Key="ExecuteSequenceTooltip">Execute command sequence</sys:String>
+    <sys:String x:Key="MoveUpTooltip">Move up</sys:String>
+    <sys:String x:Key="MoveDownTooltip">Move down</sys:String>
+    <sys:String x:Key="DeleteTooltip">Delete</sys:String>
+    <sys:String x:Key="SaveSequenceTooltip">Save sequence to file</sys:String>
+    <sys:String x:Key="LoadSequenceTooltip">Load saved sequence</sys:String>
+    <sys:String x:Key="ClearHistoryTooltip">Clear transaction history</sys:String>
+    <sys:String x:Key="ClearLogTooltip">Clear debug log</sys:String>
+    <sys:String x:Key="EditOperationTooltip">Click to edit operation</sys:String>
+    
+</ResourceDictionary>
