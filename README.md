@@ -13,6 +13,7 @@ This application is a GUI tool for communicating with I2C devices from Windows, 
 
 ## Recent Updates
 
+- **Version 1.1.0.0**
 - **Clock Edge Simplification**: The I2C clock edge setting is now fixed to the standard Negative edge (per FTDI/I2C specs). The UI control was removed to avoid accidental non-standard configurations.
 - **Portable Build Support**: Added documented steps (see "Portable Build" section) for publishing a self-contained, single-file package that runs on target PCs without installing .NET.
 - **Delay Command**: Command sequences can now insert customizable delay operations (13–60000 ms) for precise timing between I2C transactions, including serialization/deserialization support.
