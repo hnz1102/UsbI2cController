@@ -56,6 +56,23 @@ dotnet run
 
 if you prefer not to build from source, download the latest release binary from the [Releases](https://github.com/hnaka/UsbI2cController/releases) page.
 
+## Portable Build (Self-contained)
+
+The project is configured to publish a fully self-contained, single-file **portable build** (no .NET runtime required on the target PC). Generate it with:
+
+```powershell
+cd UsbI2cController
+dotnet publish -c Release -r win-x64 --self-contained true
+```
+
+The portable package is created under:
+
+```
+UsbI2cController/bin/Release/net9.0-windows/win-x64/publish
+```
+
+Copy the entire `publish` folder (or zip it) to any PC or USB drive and run `UsbI2cController.exe`. Only the FTDI D2XX driver must be installed on the host system; no additional installers are necessary for the app itself.
+
 ## Usage
 
 ### 1. Device Selection and Connection

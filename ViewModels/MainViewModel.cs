@@ -77,13 +77,7 @@ namespace UsbI2cController.ViewModels
         private bool _isClockSpeed400kHz = false;
 
         [ObservableProperty]
-        private bool _isClockEdgeNegative = true;
-
-        [ObservableProperty]
         private string _currentLanguage = "ja";
-
-        [ObservableProperty]
-        private bool _isClockEdgePositive = false;
 
         public ObservableCollection<I2CTransaction> TransactionHistory { get; } = new ObservableCollection<I2CTransaction>();
         
@@ -138,6 +132,22 @@ namespace UsbI2cController.ViewModels
             CommandOperations.CollectionChanged += (s, e) => 
             {
                 OnPropertyChanged(nameof(HasNoOperations));
+                
+                // 新しく追加された項目のプロパティ変更を監視
+                if (e.NewItems != null)
+                {
+                    foreach (CommandOperationViewModel item in e.NewItems)
+                    {
+                        item.PropertyChanged += (sender, args) =>
+                        {
+                            if (args.PropertyName == nameof(CommandOperationViewModel.DeviceAddress))
+                            {
+                                SaveCommandSequence();
+                            }
+                        };
+                    }
+                }
+                
                 SaveCommandSequence(); // 変更時に自動保存
             };
         }
@@ -216,36 +226,6 @@ namespace UsbI2cController.ViewModels
                 IsClockSpeed400kHz = true;
                 UpdateStatusMessage("StatusClockSpeed400kHz");
             }
-        }
-
-        [RelayCommand]
-        private void SetClockEdgeNegative()
-        {
-            if (!IsConnected)
-            {
-                MessageBox.Show("デバイスに接続してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            _i2cService.SetI2CClockEdge(FT232HI2CService.I2CClockEdge.NegativeEdge);
-            IsClockEdgeNegative = true;
-            IsClockEdgePositive = false;
-            UpdateStatusMessage("StatusClockEdgeNegative");
-        }
-
-        [RelayCommand]
-        private void SetClockEdgePositive()
-        {
-            if (!IsConnected)
-            {
-                MessageBox.Show("デバイスに接続してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            _i2cService.SetI2CClockEdge(FT232HI2CService.I2CClockEdge.PositiveEdge);
-            IsClockEdgeNegative = false;
-            IsClockEdgePositive = true;
-            UpdateStatusMessage("StatusClockEdgePositive");
         }
 
         [RelayCommand]
@@ -770,13 +750,22 @@ namespace UsbI2cController.ViewModels
                 {
                     I2CAddress = I2cAddress,
                     IsHexMode = IsHexMode,
-                    Operations = CommandOperations.Select(op => new OperationData
+                    Operations = CommandOperations.Select(op =>
                     {
-                        Type = op.Type.ToString(),
-                        WriteDataInput = op.WriteDataInput,
-                        ReadLengthInput = op.ReadLengthInput,
-                        Index = op.Index,
-                        Comment = op.Comment
+                        System.Diagnostics.Debug.WriteLine($"Original operation: Type={op.Type}, DelayInput='{op.DelayInput}', DeviceAddress='{op.DeviceAddress}', WriteDataInput='{op.WriteDataInput}', ReadLengthInput='{op.ReadLengthInput}', DelayMilliseconds={op.DelayMilliseconds}");
+                        
+                        var opData = new OperationData
+                        {
+                            Type = op.Type.ToString(),
+                            WriteDataInput = op.WriteDataInput ?? "",
+                            ReadLengthInput = op.ReadLengthInput ?? "",
+                            DelayInput = op.DelayInput ?? "",
+                            Index = op.Index,
+                            Comment = op.Comment ?? "",
+                            DeviceAddress = op.Type == I2COperationType.Delay ? "" : (op.DeviceAddress ?? "")
+                        };
+                        System.Diagnostics.Debug.WriteLine($"Serializing operation: Type={opData.Type}, DelayInput='{opData.DelayInput}', DeviceAddress='{opData.DeviceAddress}', WriteDataInput='{opData.WriteDataInput}'");
+                        return opData;
                     }).ToList()
                 };
 
@@ -788,9 +777,12 @@ namespace UsbI2cController.ViewModels
 
                 var json = JsonSerializer.Serialize(sequenceData, new JsonSerializerOptions
                 {
-                    WriteIndented = true
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
                 });
 
+                System.Diagnostics.Debug.WriteLine($"Saving to: {CommandSequenceFilePath}");
+                System.Diagnostics.Debug.WriteLine($"JSON content:\n{json}");
                 File.WriteAllText(CommandSequenceFilePath, json);
             }
             catch (Exception ex)
@@ -840,14 +832,29 @@ namespace UsbI2cController.ViewModels
                                     Type = opType,
                                     WriteDataInput = opData.WriteDataInput ?? "",
                                     ReadLengthInput = opData.ReadLengthInput ?? "",
+                                    DelayInput = opData.DelayInput ?? "",
                                     IsHexMode = IsHexMode,
-                                    Comment = opData.Comment ?? ""
+                                    Comment = opData.Comment ?? "",
+                                    DeviceAddress = opData.DeviceAddress ?? ""
                                 };
 
                                 // 入力をパース
                                 if (op.ParseInputs())
                                 {
+                                    // プロパティ変更を監視
+                                    op.PropertyChanged += (sender, args) =>
+                                    {
+                                        if (args.PropertyName == nameof(CommandOperationViewModel.DeviceAddress))
+                                        {
+                                            SaveCommandSequence();
+                                        }
+                                    };
+                                    
                                     CommandOperations.Add(op);
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to parse operation: Type={opType}, WriteData={opData.WriteDataInput}, ReadLength={opData.ReadLengthInput}, Delay={opData.DelayInput}");
                                 }
                             }
                         }
@@ -875,6 +882,7 @@ namespace UsbI2cController.ViewModels
             public string I2CAddress { get; set; } = "";
             public bool IsHexMode { get; set; } = true;
             public List<OperationData>? Operations { get; set; }
+            public List<string>? DeviceAddresses { get; set; }
         }
 
         /// <summary>
@@ -882,10 +890,25 @@ namespace UsbI2cController.ViewModels
         /// </summary>
         private class OperationData
         {
+            [System.Text.Json.Serialization.JsonPropertyName("Type")]
             public string Type { get; set; } = "";
-            public string? WriteDataInput { get; set; }
-            public string? ReadLengthInput { get; set; }
+            
+            [System.Text.Json.Serialization.JsonPropertyName("WriteDataInput")]
+            public string WriteDataInput { get; set; } = "";
+            
+            [System.Text.Json.Serialization.JsonPropertyName("ReadLengthInput")]
+            public string ReadLengthInput { get; set; } = "";
+            
+            [System.Text.Json.Serialization.JsonPropertyName("DelayInput")]
+            public string DelayInput { get; set; } = "";
+            
+            [System.Text.Json.Serialization.JsonPropertyName("DeviceAddress")]
+            public string DeviceAddress { get; set; } = "";
+            
+            [System.Text.Json.Serialization.JsonPropertyName("Index")]
             public int Index { get; set; }
+            
+            [System.Text.Json.Serialization.JsonPropertyName("Comment")]
             public string Comment { get; set; } = "";
         }
 
@@ -903,7 +926,8 @@ namespace UsbI2cController.ViewModels
                     Index = CommandOperations.Count + 1,
                     Type = I2COperationType.Write,
                     WriteDataInput = dialog.InputText,
-                    IsHexMode = IsHexMode
+                    IsHexMode = IsHexMode,
+                    DeviceAddress = I2cAddress
                 };
 
                 if (op.ParseInputs())
@@ -930,7 +954,8 @@ namespace UsbI2cController.ViewModels
                     Index = CommandOperations.Count + 1,
                     Type = I2COperationType.Read,
                     ReadLengthInput = dialog.InputText,
-                    IsHexMode = IsHexMode
+                    IsHexMode = IsHexMode,
+                    DeviceAddress = I2cAddress
                 };
 
                 if (op.ParseInputs())
@@ -941,6 +966,35 @@ namespace UsbI2cController.ViewModels
                 else
                 {
                     MessageBox.Show("バイト数は1～256の範囲で指定してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void AddDelayOperation()
+        {
+            // ダイアログでDelay 時間を入力
+            var dialog = new InputDialog(GetString("DelayInput"), GetString("DelayPrompt"), "13");
+            if (dialog.ShowDialog() == true)
+            {
+                var op = new CommandOperationViewModel
+                {
+                    Index = CommandOperations.Count + 1,
+                    Type = I2COperationType.Delay,
+                    DelayInput = dialog.InputText,
+                    IsHexMode = IsHexMode,
+                    DeviceAddress = ""
+                };
+
+                if (op.ParseInputs())
+                {
+                    System.Diagnostics.Debug.WriteLine($"Adding Delay operation: DelayInput={op.DelayInput}, DelayMilliseconds={op.DelayMilliseconds}");
+                    CommandOperations.Add(op);
+                    StatusMessage = $"Delay 操作を追加しました ({op.DelayMilliseconds} ms)";
+                }
+                else
+                {
+                    MessageBox.Show("待機時間は13～60000ミリ秒の範囲で指定してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
@@ -989,6 +1043,27 @@ namespace UsbI2cController.ViewModels
                 if (dialog.ShowDialog() == true)
                 {
                     operation.ReadLengthInput = dialog.InputText;
+                    operation.Comment = dialog.CommentText ?? "";
+                    if (operation.ParseInputs())
+                    {
+                        operation.NotifyPropertyChanged(nameof(operation.Description));
+                        operation.NotifyPropertyChanged(nameof(operation.Comment));
+                        SaveCommandSequence();
+                        UpdateStatusMessage("StatusOperationEdited");
+                    }
+                }
+            }
+            else if (operation.Type == I2COperationType.Delay)
+            {
+                dialog.Title = GetString("DelayInput");
+                dialog.Message = GetString("EditOperationMessage");
+                dialog.InputHint = GetString("DelayPrompt");
+                dialog.InputText = operation.DelayInput;
+                dialog.ShowDataInput = true;
+
+                if (dialog.ShowDialog() == true)
+                {
+                    operation.DelayInput = dialog.InputText;
                     operation.Comment = dialog.CommentText ?? "";
                     if (operation.ParseInputs())
                     {
@@ -1102,13 +1177,18 @@ namespace UsbI2cController.ViewModels
                 {
                     var op = CommandOperations[i];
                     bool success = false;
+                    
+                    // 操作ごとのデバイスアドレスを使用（未指定の場合はデフォルトアドレス）
+                    byte deviceAddress = !string.IsNullOrWhiteSpace(op.DeviceAddress) 
+                        ? ParseAddress(op.DeviceAddress) 
+                        : address;
 
                     switch (op.Type)
                     {
                         case I2COperationType.Write:
                             if (op.WriteData != null && op.WriteData.Length > 0)
                             {
-                                success = _i2cService.WriteI2C(address, op.WriteData);
+                                success = _i2cService.WriteI2C(deviceAddress, op.WriteData);
                                 if (success)
                                 {
                                     executedData.AddRange(op.WriteData);
@@ -1120,7 +1200,7 @@ namespace UsbI2cController.ViewModels
                             if (op.ReadLength > 0)
                             {
                                 byte[] data;
-                                success = _i2cService.ReadI2C(address, op.ReadLength, out data);
+                                success = _i2cService.ReadI2C(deviceAddress, op.ReadLength, out data);
                                 if (success && data != null)
                                 {
                                     op.ReadResultData = data;
@@ -1130,6 +1210,19 @@ namespace UsbI2cController.ViewModels
                                     op.NotifyPropertyChanged(nameof(op.ReadResultText));
                                     op.NotifyPropertyChanged(nameof(op.HasReadResult));
                                 }
+                            }
+                            break;
+
+                        case I2COperationType.Delay:
+                            if (op.DelayMilliseconds >= 13)
+                            {
+                                // シーケンス間の固有ディレイ12msを考慮して減算
+                                int actualDelay = op.DelayMilliseconds - 12;
+                                if (actualDelay > 0)
+                                {
+                                    System.Threading.Thread.Sleep(actualDelay);
+                                }
+                                success = true;
                             }
                             break;
                     }
@@ -1147,18 +1240,21 @@ namespace UsbI2cController.ViewModels
                         System.Threading.Thread.Sleep(2); // 2ms待機でバス安定化
                     }
 
-                    // 各操作をトランザクション履歴に個別に追加
-                    var transaction = new I2CTransaction
+                    // 各操作をトランザクション履歴に個別に追加（DelayとSTART/STOP系は除外）
+                    if (op.Type == I2COperationType.Write || op.Type == I2COperationType.Read)
                     {
-                        Timestamp = DateTime.Now,
-                        Type = op.Type == I2COperationType.Write ? "Write" : "Read",
-                        DeviceAddress = address,
-                        Data = op.Type == I2COperationType.Write 
-                            ? (op.WriteData ?? Array.Empty<byte>())
-                            : (op.ReadResultData ?? Array.Empty<byte>()),
-                        Success = success
-                    };
-                    TransactionHistory.Insert(0, transaction);
+                        var transaction = new I2CTransaction
+                        {
+                            Timestamp = DateTime.Now,
+                            Type = op.Type == I2COperationType.Write ? "Write" : "Read",
+                            DeviceAddress = deviceAddress, // 個別のデバイスアドレスを使用
+                            Data = op.Type == I2COperationType.Write 
+                                ? (op.WriteData ?? Array.Empty<byte>())
+                                : (op.ReadResultData ?? Array.Empty<byte>()),
+                            Success = success
+                        };
+                        TransactionHistory.Insert(0, transaction);
+                    }
                 }
 
                 // 履歴を最大100件に制限
@@ -1210,16 +1306,19 @@ namespace UsbI2cController.ViewModels
                         Operations = CommandOperations.Select(op => new
                         {
                             Type = op.Type.ToString(),
-                            WriteDataInput = op.WriteDataInput,
-                            ReadLengthInput = op.ReadLengthInput,
+                            WriteDataInput = op.WriteDataInput ?? "",
+                            ReadLengthInput = op.ReadLengthInput ?? "",
+                            DelayInput = op.DelayInput ?? "",
+                            DeviceAddress = op.Type == I2COperationType.Delay ? "" : (op.DeviceAddress ?? ""),
                             Index = op.Index,
-                            Comment = op.Comment
+                            Comment = op.Comment ?? ""
                         }).ToList()
                     };
 
                     var json = JsonSerializer.Serialize(sequenceData, new JsonSerializerOptions
                     {
-                        WriteIndented = true
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
                     });
 
                     File.WriteAllText(saveFileDialog.FileName, json);
@@ -1247,64 +1346,81 @@ namespace UsbI2cController.ViewModels
                 if (openFileDialog.ShowDialog() == true)
                 {
                     var json = File.ReadAllText(openFileDialog.FileName);
-                    var sequenceData = JsonSerializer.Deserialize<CommandSequenceData>(json);
+                    using var document = JsonDocument.Parse(json);
+                    var root = document.RootElement;
 
-                    if (sequenceData != null)
+                    // 確認ダイアログ
+                    if (CommandOperations.Count > 0)
                     {
-                        // 確認ダイアログ
-                        if (CommandOperations.Count > 0)
-                        {
-                            var result = MessageBox.Show(
-                                "現在のシーケンスを破棄して読み込みますか？",
-                                "確認",
-                                MessageBoxButton.YesNo,
-                                MessageBoxImage.Question);
+                        var result = MessageBox.Show(
+                            "現在のシーケンスを破棄して読み込みますか？",
+                            "確認",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
 
-                            if (result != MessageBoxResult.Yes)
-                            {
-                                return;
-                            }
+                        if (result != MessageBoxResult.Yes)
+                        {
+                            return;
                         }
+                    }
 
-                        // I2Cアドレス復元
-                        if (!string.IsNullOrEmpty(sequenceData.I2CAddress))
+                    // I2Cアドレス復元
+                    if (root.TryGetProperty("I2CAddress", out var i2cAddressProp))
+                    {
+                        I2cAddress = i2cAddressProp.GetString() ?? "";
+                    }
+
+                    // HEX/DECモード復元
+                    if (root.TryGetProperty("IsHexMode", out var isHexModeProp))
+                    {
+                        IsHexMode = isHexModeProp.GetBoolean();
+                        IsDecMode = !IsHexMode;
+                    }
+
+                    // 操作リスト復元
+                    CommandOperations.Clear();
+                    if (root.TryGetProperty("Operations", out var operationsProp) && operationsProp.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var opElement in operationsProp.EnumerateArray())
                         {
-                            I2cAddress = sequenceData.I2CAddress;
-                        }
-
-                        // HEX/DECモード復元
-                        IsHexMode = sequenceData.IsHexMode;
-                        IsDecMode = !sequenceData.IsHexMode;
-
-                        // 操作リスト復元
-                        CommandOperations.Clear();
-                        if (sequenceData.Operations != null)
-                        {
-                            foreach (var opData in sequenceData.Operations.OrderBy(o => o.Index))
+                            var typeStr = opElement.TryGetProperty("Type", out var typeProp) ? typeProp.GetString() : "";
+                            if (Enum.TryParse<I2COperationType>(typeStr, out var opType))
                             {
-                                if (Enum.TryParse<I2COperationType>(opData.Type, out var opType))
+                                var op = new CommandOperationViewModel
                                 {
-                                    var op = new CommandOperationViewModel
-                                    {
-                                        Index = opData.Index,
-                                        Type = opType,
-                                        WriteDataInput = opData.WriteDataInput ?? "",
-                                        ReadLengthInput = opData.ReadLengthInput ?? "",
-                                        IsHexMode = IsHexMode,
-                                        Comment = opData.Comment ?? ""
-                                    };
+                                    Index = opElement.TryGetProperty("Index", out var indexProp) ? indexProp.GetInt32() : 0,
+                                    Type = opType,
+                                    WriteDataInput = opElement.TryGetProperty("WriteDataInput", out var writeProp) ? writeProp.GetString() ?? "" : "",
+                                    ReadLengthInput = opElement.TryGetProperty("ReadLengthInput", out var readProp) ? readProp.GetString() ?? "" : "",
+                                    DelayInput = opElement.TryGetProperty("DelayInput", out var delayProp) ? delayProp.GetString() ?? "" : "",
+                                    DeviceAddress = opElement.TryGetProperty("DeviceAddress", out var deviceProp) ? deviceProp.GetString() ?? "" : "",
+                                    IsHexMode = IsHexMode,
+                                    Comment = opElement.TryGetProperty("Comment", out var commentProp) ? commentProp.GetString() ?? "" : ""
+                                };
 
-                                    // 入力をパース
-                                    if (op.ParseInputs())
+                                // 入力をパース
+                                if (op.ParseInputs())
+                                {
+                                    // プロパティ変更を監視
+                                    op.PropertyChanged += (sender, args) =>
                                     {
-                                        CommandOperations.Add(op);
-                                    }
+                                        if (args.PropertyName == nameof(CommandOperationViewModel.DeviceAddress))
+                                        {
+                                            SaveCommandSequence();
+                                        }
+                                    };
+                                    
+                                    CommandOperations.Add(op);
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Failed to parse loaded operation: Type={opType}, WriteData={op.WriteDataInput}, ReadLength={op.ReadLengthInput}, Delay={op.DelayInput}");
                                 }
                             }
                         }
-
-                        UpdateStatusMessage("StatusSequenceLoaded", Path.GetFileName(openFileDialog.FileName), CommandOperations.Count);
                     }
+
+                    UpdateStatusMessage("StatusSequenceLoaded", Path.GetFileName(openFileDialog.FileName), CommandOperations.Count);
                 }
             }
             catch (Exception ex)

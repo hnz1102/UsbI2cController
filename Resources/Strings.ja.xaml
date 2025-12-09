@@ -17,15 +17,13 @@
     <sys:String x:Key="ClockSpeed">クロック速度:</sys:String>
     <sys:String x:Key="ClockSpeed100kHz">100 kHz</sys:String>
     <sys:String x:Key="ClockSpeed400kHz">400 kHz</sys:String>
-    <sys:String x:Key="ClockEdge">クロックエッジ:</sys:String>
-    <sys:String x:Key="ClockEdgeNegative">Negative (推奨)</sys:String>
-    <sys:String x:Key="ClockEdgePositive">Positive</sys:String>
     <sys:String x:Key="Language">言語:</sys:String>
     
     <!-- Command Sequence Section -->
     <sys:String x:Key="CommandSequenceSection">コマンドシーケンス</sys:String>
     <sys:String x:Key="AddWriteOperation">Write追加</sys:String>
     <sys:String x:Key="AddReadOperation">Read追加</sys:String>
+    <sys:String x:Key="AddDelayOperation">Delay追加</sys:String>
     <sys:String x:Key="ExecuteSequence">実行</sys:String>
     <sys:String x:Key="ClearSequence">クリア</sys:String>
     <sys:String x:Key="SaveSequence">保存</sys:String>
@@ -56,6 +54,8 @@
     <sys:String x:Key="WriteDataPrompt">データ (HEX: 0x1A 0x2B / DEC: 26 43):</sys:String>
     <sys:String x:Key="ReadLengthInput">Read バイト数入力</sys:String>
     <sys:String x:Key="ReadLengthPrompt">読み込みバイト数 (1-256):</sys:String>
+    <sys:String x:Key="DelayInput">Delay 時間入力</sys:String>
+    <sys:String x:Key="DelayPrompt">待機時間 (ミリ秒, 13-60000):</sys:String>
     <sys:String x:Key="CommentInput">コメント</sys:String>
     <sys:String x:Key="CommentPrompt">コマンドの説明やメモを入力してください（省略可）:</sys:String>
     <sys:String x:Key="EditOperationMessage">コマンドの内容とコメントを編集します:</sys:String>
@@ -85,8 +85,6 @@
     <sys:String x:Key="StatusDebugLogHidden">デバッグログを非表示</sys:String>
     <sys:String x:Key="StatusClockSpeed100kHz">I2Cクロック速度: 100kHz</sys:String>
     <sys:String x:Key="StatusClockSpeed400kHz">I2Cクロック速度: 400kHz</sys:String>
-    <sys:String x:Key="StatusClockEdgeNegative">I2Cクロックエッジ: Negative (High→Low)</sys:String>
-    <sys:String x:Key="StatusClockEdgePositive">I2Cクロックエッジ: Positive (Low→High)</sys:String>
     <sys:String x:Key="StatusDevicesFound">{0}台のデバイスが見つかりました</sys:String>
     <sys:String x:Key="StatusNoDeviceFound">FT232Hデバイスが見つかりません</sys:String>
     <sys:String x:Key="StatusDeviceSearchError">デバイス検索エラー: {0}</sys:String>
@@ -127,8 +125,6 @@
     <sys:String x:Key="ConnectDeviceTooltip">選択したデバイスに接続</sys:String>
     <sys:String x:Key="DisconnectDeviceTooltip">デバイスから切断</sys:String>
     <sys:String x:Key="GPIOTestTooltip">GPIOテストを実行</sys:String>
-    <sys:String x:Key="ClockEdgeNegativeTooltip">0x11: I2C標準 - SDA変化=SCL Low時, サンプリング=SCL High時</sys:String>
-    <sys:String x:Key="ClockEdgePositiveTooltip">0x10: 非標準 - デバッグ用</sys:String>
     <sys:String x:Key="ToggleDebugLogTooltip">デバッグログの表示/非表示を切り替え</sys:String>
     <sys:String x:Key="RefreshDevicesTooltip">デバイスリストを更新</sys:String>
     <sys:String x:Key="StartScanTooltip">I2Cアドレスをスキャンして接続されているデバイスを検出</sys:String>

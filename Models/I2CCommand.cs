@@ -12,7 +12,8 @@ namespace UsbI2cController.Models
         Read,           // データ読み込み
         Start,          // START条件（通常は自動）
         RepeatedStart,  // Repeated START条件
-        Stop            // STOP条件（通常は自動）
+        Stop,           // STOP条件（通常は自動）
+        Delay           // 待機時間（ミリ秒）
     }
 
     /// <summary>
@@ -40,6 +41,11 @@ namespace UsbI2cController.Models
         /// </summary>
         public byte[]? ReadData { get; set; }
 
+        /// <summary>
+        /// 待機時間（Delay時のみ、ミリ秒）
+        /// </summary>
+        public int DelayMilliseconds { get; set; }
+
     /// <summary>
     /// 説明
     /// </summary>
@@ -57,6 +63,7 @@ namespace UsbI2cController.Models
                 I2COperationType.Start => "START",
                 I2COperationType.RepeatedStart => "Repeated START",
                 I2COperationType.Stop => "STOP",
+                I2COperationType.Delay => $"Delay: {DelayMilliseconds} ms",
                 _ => Type.ToString()
             };
         }

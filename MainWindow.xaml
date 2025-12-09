@@ -113,26 +113,6 @@
                                        Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
                                        Margin="0,0,16,0"/>
                             
-                            <TextBlock Text="Clock Edge:" 
-                                       VerticalAlignment="Center" 
-                                       Margin="8,0,8,0"/>
-                            
-                            <RadioButton Content="{DynamicResource ClockEdgeNegative}" 
-                                       IsChecked="{Binding IsClockEdgeNegative}"
-                                       Command="{Binding SetClockEdgeNegativeCommand}"
-                                       IsEnabled="{Binding IsConnected}"
-                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
-                                       ToolTip="{DynamicResource ClockEdgeNegativeTooltip}"
-                                       Margin="0,0,4,0"/>
-                            
-                            <RadioButton Content="Positive" 
-                                       IsChecked="{Binding IsClockEdgePositive}"
-                                       Command="{Binding SetClockEdgePositiveCommand}"
-                                       IsEnabled="{Binding IsConnected}"
-                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
-                                       ToolTip="{DynamicResource ClockEdgePositiveTooltip}"
-                                       Margin="0,0,16,0"/>
-                            
                             <TextBlock Text="{DynamicResource Language}" 
                                        VerticalAlignment="Center" 
                                        Margin="8,0,8,0"/>
@@ -252,7 +232,6 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -283,28 +262,8 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- I2Cアドレス入力 -->
-                        <Grid Grid.Row="1" Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <TextBox Grid.Column="0"
-                                     materialDesign:HintAssist.Hint="{DynamicResource I2CAddressHint}"
-                                     Text="{Binding I2cAddress, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
-                            
-                            <TextBlock Grid.Column="2"
-                                       Text="{DynamicResource SequenceDescription}"
-                                       VerticalAlignment="Center"
-                                       Opacity="0.7"
-                                       Style="{StaticResource MaterialDesignBody2TextBlock}"/>
-                        </Grid>
-
                         <!-- 操作リスト -->
-                        <Border Grid.Row="2" 
+                        <Border Grid.Row="1" 
                                 BorderBrush="{DynamicResource MaterialDesignDivider}"
                                 BorderThickness="1"
                                 CornerRadius="4"
@@ -326,6 +285,7 @@
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                             <ColumnDefinition Width="120"/>
+                                                            <ColumnDefinition Width="100"/>
                                                             <ColumnDefinition Width="*"/>
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
@@ -359,7 +319,18 @@
                                                                            Content="{Binding TypeDisplay}"
                                                                            Margin="0,0,8,0"/>
                                                         
-                                                <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                                        <TextBox Grid.Column="3"
+                                                                 Text="{Binding DeviceAddress, UpdateSourceTrigger=PropertyChanged}"
+                                                                 materialDesign:HintAssist.Hint="Address"
+                                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                                 FontSize="12"
+                                                                 Padding="4,8"
+                                                                 Margin="0,0,8,0"
+                                                                 VerticalAlignment="Center"
+                                                                 ToolTip="Device Address (e.g. 0x50)"
+                                                                 Visibility="{Binding ShowDeviceAddress, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                        
+                                                <StackPanel Grid.Column="4" VerticalAlignment="Center">
                                                     <Button Command="{Binding DataContext.EditOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             Style="{StaticResource MaterialDesignFlatButton}"
@@ -397,7 +368,7 @@
                                                                        VerticalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Border>
-                                                </StackPanel>                                                        <Button Grid.Column="4"
+                                                </StackPanel>                                                        <Button Grid.Column="5"
                                                                 Command="{Binding DataContext.RemoveOperationCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                                 CommandParameter="{Binding}"
                                                                 Style="{StaticResource MaterialDesignIconButton}"
@@ -420,8 +391,10 @@
                         </Border>
 
                         <!-- 操作追加ボタン（上段） -->
-                        <Grid Grid.Row="3">
+                        <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
                                 <ColumnDefinition Width="*"/>
@@ -454,6 +427,17 @@
                             </Button>
                             
                             <Button Grid.Column="4"
+                                    Command="{Binding AddDelayOperationCommand}"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    ToolTip="Add Delay operation"
+                                    Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Delay" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Grid.Column="6"
                                     Command="{Binding ClearOperationsCommand}"
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
                                     ToolTip="{DynamicResource ClearSequenceTooltip}"
@@ -464,7 +448,7 @@
                                 </StackPanel>
                             </Button>
                             
-                            <Button Grid.Column="6"
+                            <Button Grid.Column="8"
                                     Command="{Binding ExecuteSequenceCommand}"
                                     IsEnabled="{Binding IsConnected}"
                                     Style="{StaticResource MaterialDesignRaisedButton}"
@@ -479,7 +463,7 @@
                         </Grid>
                         
                         <!-- ファイル操作ボタン（下段） -->
-                        <Grid Grid.Row="4" Margin="0,8,0,0">
+                        <Grid Grid.Row="3" Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="8"/>

@@ -20,17 +20,21 @@ namespace UsbI2cController.ViewModels
         [ObservableProperty]
         private string _writeDataInput = "";
 
-        [ObservableProperty]
-        private string _readLengthInput = "";
-
-        [ObservableProperty]
-        private bool _isHexMode = true;
+    [ObservableProperty]
+    private string _readLengthInput = "";
 
     [ObservableProperty]
+    private string _delayInput = "";
+
+    [ObservableProperty]
+    private bool _isHexMode = true;    [ObservableProperty]
     private byte[]? _readResultData;
 
     [ObservableProperty]
     private string _comment = "";
+
+    [ObservableProperty]
+    private string _deviceAddress = "";
 
     /// <summary>
     /// 実際の書き込みデータ（パース済み）
@@ -39,6 +43,16 @@ namespace UsbI2cController.ViewModels
         /// 読み込みバイト数
         /// </summary>
         public int ReadLength { get; set; }
+
+        /// <summary>
+        /// 待機時間（ミリ秒）
+        /// </summary>
+        public int DelayMilliseconds { get; set; }
+
+        /// <summary>
+        /// デバイスアドレス入力欄を表示するか（Delay以外のコマンドで表示）
+        /// </summary>
+        public bool ShowDeviceAddress => Type != I2COperationType.Delay;
 
         /// <summary>
         /// タイプの表示名
@@ -50,6 +64,7 @@ namespace UsbI2cController.ViewModels
             I2COperationType.Start => "START",
             I2COperationType.RepeatedStart => "Rpt START",
             I2COperationType.Stop => "STOP",
+            I2COperationType.Delay => "DELAY",
             _ => Type.ToString()
         };
 
@@ -63,7 +78,7 @@ namespace UsbI2cController.ViewModels
                 var isJapanese = System.Windows.Application.Current.Resources.MergedDictionaries
                     .Any(d => d.Source != null && d.Source.OriginalString.Contains("Strings.ja"));
                 
-                return Type switch
+                var description = Type switch
                 {
                     I2COperationType.Write => WriteData != null && WriteData.Length > 0
                         ? (isJapanese 
@@ -76,8 +91,13 @@ namespace UsbI2cController.ViewModels
                     I2COperationType.Start => isJapanese ? "START条件を送信" : "Send START condition",
                     I2COperationType.RepeatedStart => isJapanese ? "Repeated START条件を送信" : "Send Repeated START condition",
                     I2COperationType.Stop => isJapanese ? "STOP条件を送信" : "Send STOP condition",
+                    I2COperationType.Delay => isJapanese 
+                        ? $"{DelayMilliseconds} ミリ秒待機" 
+                        : $"Wait {DelayMilliseconds} ms",
                     _ => ""
                 };
+                
+                return description;
             }
         }
 
@@ -136,6 +156,14 @@ namespace UsbI2cController.ViewModels
                         ReadLength = length;
                         return true;
 
+                    case I2COperationType.Delay:
+                        if (!int.TryParse(DelayInput, out int delay) || delay < 13 || delay > 60000)
+                        {
+                            return false;
+                        }
+                        DelayMilliseconds = delay;
+                        return true;
+
                     case I2COperationType.Start:
                     case I2COperationType.RepeatedStart:
                     case I2COperationType.Stop:
@@ -162,6 +190,7 @@ namespace UsbI2cController.ViewModels
                 WriteData = WriteData,
                 ReadLength = ReadLength,
                 ReadData = ReadResultData,
+                DelayMilliseconds = DelayMilliseconds,
                 Description = Description,
                 Comment = Comment
             };

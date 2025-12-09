@@ -13,8 +13,8 @@ namespace UsbI2cController.Services
         private bool _isInitialized;
         private int _currentDeviceIndex = -1;
         
-        // I2C clock edge setting
-        private byte _i2cWriteCommand = 0x11; // Default: Negative Edge
+        // I2C clock edge setting (fixed to Negative Edge per I2C spec)
+        private byte _i2cWriteCommand = 0x11;
         
         public enum I2CClockSpeed
         {
@@ -22,12 +22,6 @@ namespace UsbI2cController.Services
             Fast_400kHz = 1       // 400kHz: 2.5us period → 1.25us per edge
         }
         
-        public enum I2CClockEdge
-        {
-            NegativeEdge = 0,  // 0x11: Output data on SCL High→Low (I2C standard)
-            PositiveEdge = 1   // 0x10: Output data on SCL Low→High (non-standard)
-        }
-
         // Debug log event
         public event Action<string>? DebugLog;
 
@@ -207,27 +201,6 @@ namespace UsbI2cController.Services
         }
 
         /// <summary>
-        /// Set I2C clock edge
-        /// </summary>
-        /// <param name="edge">Clock edge (NegativeEdge or PositiveEdge)</param>
-        public void SetI2CClockEdge(I2CClockEdge edge)
-        {
-            switch (edge)
-            {
-                case I2CClockEdge.NegativeEdge:
-                    _i2cWriteCommand = 0x11; // Clock data out on -ve edge (SCL High→Low)
-                    Log("I2C Clock Edge: Negative Edge (0x11)");
-                    Log("  - I2C Standard: SDA changes on SCL Low, sampled on SCL High");
-                    break;
-                case I2CClockEdge.PositiveEdge:
-                    _i2cWriteCommand = 0x10; // Clock data out on +ve edge (SCL Low→High)
-                    Log("I2C Clock Edge: Positive Edge (0x10) - Non-standard");
-                    Log("  - WARNING: SDA changes on SCL High (violates I2C specification)");
-                    break;
-            }
-        }
-
-        /// <summary>
         /// Set I2C clock speed
         /// </summary>
         /// <param name="speed">Clock speed (Standard_100kHz or Fast_400kHz)</param>
@@ -291,7 +264,7 @@ namespace UsbI2cController.Services
         }
 
         /// <summary>
-        /// Write data to I2C device
+        /// Write data to I2C device (continuous transmission from START to STOP)
         /// </summary>
         /// <param name="deviceAddress">7-bit I2C address</param>
         /// <param name="data">Data bytes to send</param>
@@ -320,87 +293,134 @@ namespace UsbI2cController.Services
                 // START condition
                 buffer.AddRange(I2CStart());
                 
-                // Send address (Write) with ACK check
-                buffer.AddRange(I2CWriteByte(writeAddress));
+                // Send address byte
+                buffer.Add(0x11); // Clock data byte out on -ve edge, MSB first
+                buffer.Add(0x00); // Length Low (1 byte - 1 = 0)
+                buffer.Add(0x00); // Length High
+                buffer.Add(writeAddress);
                 
-                // Send data (with ACK check for each byte)
-                foreach (byte b in data)
+                // Get Acknowledge bit for address
+                buffer.Add(0x80); // Command to set directions of lower 8 pins
+                buffer.Add(0x00); // Set SCL low
+                buffer.Add(0x11); // Set SK, GPIOL0 as output, DO and others as input
+                
+                buffer.Add(0x22); // MSB_RISING_EDGE_CLOCK_BIT_IN - scan in ACK bit
+                buffer.Add(0x00); // Length of 0x0 means to scan in 1 bit
+                
+                // Set SDA high, SCL low after ACK
+                buffer.Add(0x80);
+                buffer.Add(0x02); // Set SDA high, SCL low
+                buffer.Add(0x13); // Set SK,DO,GPIOL0 as output
+                
+                // Send data bytes
+                foreach (byte dataByte in data)
                 {
-                    buffer.AddRange(I2CWriteByte(b));
+                    // Clock data byte out on -ve Clock Edge MSB first
+                    buffer.Add(0x11); // MSB_FALLING_EDGE_CLOCK_BYTE_OUT
+                    buffer.Add(0x00); // Length Low
+                    buffer.Add(0x00); // Length High
+                    buffer.Add(dataByte); // Data to be sent
+                    
+                    // Get Acknowledge bit
+                    buffer.Add(0x80); // Command to set directions
+                    buffer.Add(0x00); // Set SCL low
+                    buffer.Add(0x11); // Set SK, GPIOL0 as output, DO and others as input
+                    
+                    buffer.Add(0x22); // MSB_RISING_EDGE_CLOCK_BIT_IN - scan in ACK bit
+                    buffer.Add(0x00); // Length of 0x0 means to scan in 1 bit
+                    
+                    // Set SDA high, SCL low after ACK
+                    buffer.Add(0x80);
+                    buffer.Add(0x02); // Set SDA high, SCL low
+                    buffer.Add(0x13); // Set SK,DO,GPIOL0 as output
                 }
                 
                 // STOP condition
                 buffer.AddRange(I2CStop());
                 
-                // Send to FTDI
+                // Send answer back immediate command
+                buffer.Add(0x87);
+                
+                // Send all commands at once
                 uint bytesWritten = 0;
                 FTDI.FT_STATUS status = _ftdi.Write(buffer.ToArray(), buffer.Count, ref bytesWritten);
                 
-                if (status == FTDI.FT_STATUS.FT_OK && bytesWritten == buffer.Count)
+                if (status != FTDI.FT_STATUS.FT_OK)
                 {
-                    Log($"I2C Write: Command sent successfully ({bytesWritten} bytes)");
-                    
-                    // Wait for ACK responses (address + data bytes)
-                    int expectedAckBytes = 1 + data.Length;
-                    
-                    // Wait for the bytes to come back (ACK bits from slave)
-                    uint bytesAvailable = 0;
-                    int readTimeoutCounter = 0;
+                    Log($"I2C Write failed: Write command error");
+                    return false;
+                }
+                
+                Log($"I2C Write: Commands sent successfully ({bytesWritten} bytes)");
+                
+                // Wait for ACK responses (address + data bytes)
+                int expectedAckBytes = 1 + data.Length;
+                
+                // Wait for the bytes to come back (ACK bits from slave)
+                uint bytesAvailable = 0;
+                int readTimeoutCounter = 0;
+                status = _ftdi.GetRxBytesAvailable(ref bytesAvailable);
+                
+                while ((bytesAvailable < expectedAckBytes) && (status == FTDI.FT_STATUS.FT_OK) && (readTimeoutCounter < 500))
+                {
                     status = _ftdi.GetRxBytesAvailable(ref bytesAvailable);
+                    readTimeoutCounter++;
+                    System.Threading.Thread.Sleep(1);
+                }
+                
+                if (status != FTDI.FT_STATUS.FT_OK || bytesAvailable == 0)
+                {
+                    Log($"I2C Write failed: No ACK response (expected {expectedAckBytes} bytes, timeout={readTimeoutCounter})");
+                    return false;
+                }
+                
+                byte[] ackBuffer = new byte[bytesAvailable];
+                uint ackRead = 0;
+                status = _ftdi.Read(ackBuffer, bytesAvailable, ref ackRead);
+                
+                if (status == FTDI.FT_STATUS.FT_OK && ackRead > 0)
+                {
+                    Log($"I2C Write: ACK response received ({ackRead} bytes, expected {expectedAckBytes})");
+                    Log($"  ACK data: {BitConverter.ToString(ackBuffer, 0, (int)ackRead)}");
                     
-                    while ((bytesAvailable < expectedAckBytes) && (status == FTDI.FT_STATUS.FT_OK) && (readTimeoutCounter < 500))
+                    // Check ACK bits (bit 0 should be 0 for ACK, 1 for NACK)
+                    bool allAck = true;
+                    for (int i = 0; i < Math.Min(expectedAckBytes, (int)ackRead); i++)
                     {
-                        status = _ftdi.GetRxBytesAvailable(ref bytesAvailable);
-                        readTimeoutCounter++;
-                        System.Threading.Thread.Sleep(1); // short delay
-                    }
-                    
-                    if ((status == FTDI.FT_STATUS.FT_OK) && (readTimeoutCounter < 500))
-                    {
-                        byte[] ackBuffer = new byte[bytesAvailable];
-                        uint ackRead = 0;
-                        _ftdi.Read(ackBuffer, bytesAvailable, ref ackRead);
-                        
-                        Log($"I2C Write: ACK response received ({ackRead} bytes, expected {expectedAckBytes})");
-                        Log($"  ACK data: {BitConverter.ToString(ackBuffer, 0, (int)ackRead)}");
-                        
-                        // Check ACK bits (bit 0 should be 0 for ACK, 1 for NACK)
-                        bool allAck = true;
-                        for (int i = 0; i < Math.Min(expectedAckBytes, (int)ackRead); i++)
+                        bool ack = (ackBuffer[i] & 0x01) == 0x00;
+                        if (!ack)
                         {
-                            bool ack = (ackBuffer[i] & 0x01) == 0x00; // Check ACK bit 0 on data byte
-                            if (!ack)
+                            if (i == 0)
                             {
-                                Log($"I2C Write: NACK received at byte {i} (0x{ackBuffer[i]:X2})");
-                                allAck = false;
+                                Log($"I2C Write: Address 0x{deviceAddress:X2} NACK - device not responding");
                             }
-                        }
-                        
-                        if (!allAck)
-                        {
-                            Log("I2C Write: WARNING - Device NACK received! Device may be write-protected or not responding.");
-                        }
-                        else
-                        {
-                            Log("I2C Write: All ACKs confirmed");
+                            else
+                            {
+                                Log($"I2C Write: Data byte {i-1} (0x{data[i-1]:X2}) NACK");
+                            }
+                            allAck = false;
                         }
                     }
-                    else
+                    
+                    if (!allAck)
                     {
-                        Log("I2C Write: Timeout or error waiting for ACK response");
+                        Log("I2C Write: NACK received - write failed");
+                        return false;
                     }
                     
-                    // Wait for EEPROM write cycle (20ms for safety)
-                    System.Threading.Thread.Sleep(20);
-                    
-                    Log("I2C Write: Write cycle wait completed (20ms)");
-                    return true;
+                    Log("I2C Write: All ACKs confirmed");
                 }
                 else
                 {
-                    Log($"I2C Write failed: Status={status}, BytesWritten={bytesWritten}/{buffer.Count}");
+                    Log("I2C Write: Failed to read ACK response");
                     return false;
                 }
+                
+                // Wait for EEPROM write cycle (20ms for safety)
+                // System.Threading.Thread.Sleep(20);
+                
+                Log("I2C Write: Write cycle completed successfully");
+                return true;
             }
             catch (Exception ex)
             {
@@ -849,28 +869,18 @@ namespace UsbI2cController.Services
                 // Read ACK bit: Direct GPIO control for timing
                 // Set AD1(SDA-out) High (release), SCL=Low
                 buffer.Add(0x80); // Set data bits low byte
-                buffer.Add(0x02); // Value: AD0(SCL)=0, AD1(SDA)=1
-                buffer.Add(0x0B); // Direction: AD0/1/3=out, AD2=in
+                buffer.Add(0x00); // Value: AD0(SCL)=0, AD1(SDA)=0
+                buffer.Add(0x11); // Direction: AD0=out, AD1/2=in
                 
                 // Set SCL High and sample ACK bit
-                buffer.Add(0x80); // Set data bits low byte
-                buffer.Add(0x03); // Value: AD0(SCL)=1, AD1(SDA)=1
-                buffer.Add(0x0B); // Direction: AD0/1/3=out, AD2=in
-                
-                // Read GPIO state (get SDA state from AD2)
-                buffer.Add(0x81); // Read data bits low byte
-                
-                // Return SCL Low
-                buffer.Add(0x80); // Set data bits low byte
-                buffer.Add(0x02); // Value: AD0(SCL)=0, AD1(SDA)=1
-                buffer.Add(0x0B); // Direction: AD0/1/3=out, AD2=in
-                
-                // STOP condition
-                buffer.AddRange(I2CStop());
-                
+                buffer.Add(0x22); // MSB Rising edge clock + GPIO bits read
+                buffer.Add(0x00); // Length Low (1 bit - 1 = 0)
+
                 // Send immediately
                 buffer.Add(0x87);
-                
+
+                buffer.AddRange(I2CStop());
+                                
                 // Send to FTDI
                 uint bytesWritten = 0;
                 FTDI.FT_STATUS status = _ftdi.Write(buffer.ToArray(), buffer.Count, ref bytesWritten);
@@ -881,33 +891,20 @@ namespace UsbI2cController.Services
                     return false;
                 }
                 
-                // Wait for ACK bit read
-                System.Threading.Thread.Sleep(10);
-                
-                // Check received data
-                uint bytesAvailable = 0;
-                status = _ftdi.GetRxBytesAvailable(ref bytesAvailable);
-                
-                if (status != FTDI.FT_STATUS.FT_OK || bytesAvailable == 0)
-                {
-                    return false;
-                }
-                
+                // Check ACK bit response
+                uint bytesAvailable = 1;                
                 byte[] readBuffer = new byte[bytesAvailable];
                 uint bytesRead = 0;
-                status = _ftdi.Read(readBuffer, bytesAvailable, ref bytesRead);
-                
-                if (status == FTDI.FT_STATUS.FT_OK && bytesRead >= 1)
+                FTDI.FT_STATUS read_status = _ftdi.Read(readBuffer, bytesAvailable, ref bytesRead);
+
+                // Log($"Address 0x{address:X2}: Read {bytesRead} bytes (expected >=1)");
+                if (read_status == FTDI.FT_STATUS.FT_OK && bytesRead >= 1)
                 {
-                    // Get result from 0x81 command (GPIO read)
+                    // Check ACK bit (bit 0)
                     byte gpioState = readBuffer[0];
-                    
-                    // Check AD2 bit (bit 2)
-                    // ACK = AD2=0 (Low), NACK = AD2=1 (High)
-                    bool ackReceived = (gpioState & 0x04) == 0;
+                    bool ackReceived = (gpioState & 0x01) == 0;
                     
                     // Debug log (detailed)
-                    if (address % 16 == 0 || ackReceived)  // Log every 16 addresses or on detection
                     {
                         StringBuilder logBuilder = new StringBuilder();
                         logBuilder.AppendLine($"Address 0x{address:X2}: GPIO = 0x{gpioState:X2} (binary: {Convert.ToString(gpioState, 2).PadLeft(8, '0')})");
@@ -948,9 +945,9 @@ namespace UsbI2cController.Services
             for (int i = 0; i < 4; i++)
             {
                 cmd.Add(0x80); // Set data bits low byte
-                cmd.Add(0xFD); // Value: AD0(SCL)=1, AD1(SDA)=0, AD2=0, AD3=1, others=1
+                cmd.Add(0x03); // Value: AD0(SCL)=1, AD1(SDA)=0, AD2=0, AD3=1, others=1
                                // Binary: 1111 1101 - SDA low, SCL high
-                cmd.Add(0xFB); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
+                cmd.Add(0x13); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
             }
             
             // START condition complete: SCL Low
@@ -958,11 +955,14 @@ namespace UsbI2cController.Services
             for (int i = 0; i < 4; i++)
             {
                 cmd.Add(0x80); // Set data bits low byte
-                cmd.Add(0xFC); // Value: AD0(SCL)=0, AD1(SDA)=0, AD2=0, AD3=1, others=1
+                cmd.Add(0x01); // Value: AD0(SCL)=0, AD1(SDA)=0, AD2=0, AD3=1, others=1
                                // Binary: 1111 1100 - Both SCL and SDA low
-                cmd.Add(0xFB); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
+                cmd.Add(0x13); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
             }
-            
+            cmd.Add(0x80);
+            cmd.Add(0x00); 
+            cmd.Add(0x13);
+
             return cmd.ToArray();
         }
 
@@ -1014,14 +1014,20 @@ namespace UsbI2cController.Services
             // 0x10 = Clock data byte out on +ve edge, MSB first (non-standard)
             List<byte> cmd = new List<byte>
             {
-                _i2cWriteCommand, // Clock edge command (0x11 or 0x10)
+                _i2cWriteCommand, // Clock edge command (always 0x11: negative edge)
                 0x00, // Length Low (1 byte - 1 = 0)
                 0x00, // Length High
                 data, // Actual data byte
+
+                // Read ACK bit: Direct GPIO control for timing
+                // Set AD1(SDA-out) High (release), SCL=Low
+                0x80, // Set data bits low byte
+                0x00, // Value: AD0(SCL)=0, AD1(SDA)=0
+                0x11, // Direction: AD0=out, AD1/2=in
                 
-                // Read ACK bit (sample on SCL rising edge)
-                0x22, // Command to clock in bits MSB first on rising edge
-                0x00, // Length of 0x00 means to scan in 1 bit
+                // Read ACK bit: Set SCL High and sample ACK bit
+                0x22, // Set data bits low byte
+                0x00, // Length Low (1 bit - 1 = 0)
                 
                 // This command tells the MPSSE to send any results gathered back immediately
                 0x87  // Send answer back immediate command

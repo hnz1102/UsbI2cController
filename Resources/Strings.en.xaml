@@ -17,15 +17,13 @@
     <sys:String x:Key="ClockSpeed">Clock Speed:</sys:String>
     <sys:String x:Key="ClockSpeed100kHz">100 kHz</sys:String>
     <sys:String x:Key="ClockSpeed400kHz">400 kHz</sys:String>
-    <sys:String x:Key="ClockEdge">Clock Edge:</sys:String>
-    <sys:String x:Key="ClockEdgeNegative">Negative (Recommended)</sys:String>
-    <sys:String x:Key="ClockEdgePositive">Positive</sys:String>
     <sys:String x:Key="Language">Language:</sys:String>
     
     <!-- Command Sequence Section -->
     <sys:String x:Key="CommandSequenceSection">Command Sequence</sys:String>
     <sys:String x:Key="AddWriteOperation">Add Write</sys:String>
     <sys:String x:Key="AddReadOperation">Add Read</sys:String>
+    <sys:String x:Key="AddDelayOperation">Add Delay</sys:String>
     <sys:String x:Key="ExecuteSequence">Execute</sys:String>
     <sys:String x:Key="ClearSequence">Clear</sys:String>
     <sys:String x:Key="SaveSequence">Save</sys:String>
@@ -56,6 +54,8 @@
     <sys:String x:Key="WriteDataPrompt">Data (HEX: 0x1A 0x2B / DEC: 26 43):</sys:String>
     <sys:String x:Key="ReadLengthInput">Read Length Input</sys:String>
     <sys:String x:Key="ReadLengthPrompt">Read length (1-256):</sys:String>
+    <sys:String x:Key="DelayInput">Delay Time Input</sys:String>
+    <sys:String x:Key="DelayPrompt">Delay time (milliseconds, 13-60000):</sys:String>
     <sys:String x:Key="CommentInput">Comment</sys:String>
     <sys:String x:Key="CommentPrompt">Enter a description or note for this command (optional):</sys:String>
     <sys:String x:Key="EditOperationMessage">Edit command data and comment:</sys:String>
@@ -85,8 +85,6 @@
     <sys:String x:Key="StatusDebugLogHidden">Debug log hidden</sys:String>
     <sys:String x:Key="StatusClockSpeed100kHz">I2C Clock Speed: 100kHz</sys:String>
     <sys:String x:Key="StatusClockSpeed400kHz">I2C Clock Speed: 400kHz</sys:String>
-    <sys:String x:Key="StatusClockEdgeNegative">I2C Clock Edge: Negative (High→Low)</sys:String>
-    <sys:String x:Key="StatusClockEdgePositive">I2C Clock Edge: Positive (Low→High)</sys:String>
     <sys:String x:Key="StatusDevicesFound">{0} device(s) found</sys:String>
     <sys:String x:Key="StatusNoDeviceFound">FT232H device not found</sys:String>
     <sys:String x:Key="StatusDeviceSearchError">Device search error: {0}</sys:String>
@@ -127,8 +125,6 @@
     <sys:String x:Key="ConnectDeviceTooltip">Connect to the selected device</sys:String>
     <sys:String x:Key="DisconnectDeviceTooltip">Disconnect from device</sys:String>
     <sys:String x:Key="GPIOTestTooltip">Run GPIO test</sys:String>
-    <sys:String x:Key="ClockEdgeNegativeTooltip">0x11: I2C Standard - SDA changes on SCL Low, sampled on SCL High</sys:String>
-    <sys:String x:Key="ClockEdgePositiveTooltip">0x10: Non-standard - For debugging</sys:String>
     <sys:String x:Key="ToggleDebugLogTooltip">Toggle debug log visibility</sys:String>
     <sys:String x:Key="RefreshDevicesTooltip">Refresh device list</sys:String>
     <sys:String x:Key="StartScanTooltip">Scan I2C addresses to detect connected devices</sys:String>

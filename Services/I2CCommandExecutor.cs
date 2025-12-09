@@ -34,13 +34,16 @@ namespace UsbI2cController.Services
                 foreach (var operation in sequence.Operations)
                 {
                     bool success = false;
+                    
+                    // 操作ごとのデバイスアドレスを取得（未指定の場合はシーケンスのアドレスを使用）
+                    byte deviceAddress = sequence.DeviceAddress;
 
                     switch (operation.Type)
                     {
                         case I2COperationType.Write:
                             if (operation.WriteData != null && operation.WriteData.Length > 0)
                             {
-                                success = _i2cService.WriteI2C(sequence.DeviceAddress, operation.WriteData);
+                                success = _i2cService.WriteI2C(deviceAddress, operation.WriteData);
                             }
                             break;
 
@@ -48,7 +51,7 @@ namespace UsbI2cController.Services
                             if (operation.ReadLength > 0)
                             {
                                 byte[] data;
-                                success = _i2cService.ReadI2C(sequence.DeviceAddress, operation.ReadLength, out data);
+                                success = _i2cService.ReadI2C(deviceAddress, operation.ReadLength, out data);
                                 operation.ReadData = data;
                             }
                             break;
@@ -58,6 +61,19 @@ namespace UsbI2cController.Services
                         case I2COperationType.Stop:
                             // これらは通常、Write/Readメソッド内で自動的に処理される
                             success = true;
+                            break;
+
+                        case I2COperationType.Delay:
+                            if (operation.DelayMilliseconds >= 13)
+                            {
+                                // シーケンス間の固有ディレイ12msを考慮して減算
+                                int actualDelay = operation.DelayMilliseconds - 12;
+                                if (actualDelay > 0)
+                                {
+                                    System.Threading.Thread.Sleep(actualDelay);
+                                }
+                                success = true;
+                            }
                             break;
                     }
 

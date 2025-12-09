@@ -46,7 +46,7 @@
                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
         <!-- ボタン -->
-        <StackPanel Grid.Row="7" 
+        <StackPanel Grid.Row="7"
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right">
             <Button Content="{DynamicResource OK}"
