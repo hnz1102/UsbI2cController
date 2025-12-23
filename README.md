@@ -13,6 +13,13 @@ This application is a GUI tool for communicating with I2C devices from Windows, 
 
 ## Recent Updates
 
+- **Version 0.3.0.0**
+- **MPSSE Clocking Mode Selection**: Added UI controls to switch between 2-phase and 3-phase clocking modes for MPSSE (FT232H's Multi-Protocol Synchronous Serial Engine). This allows fine-tuning of I2C timing characteristics.
+  - 2-Phase Mode (default): Standard I2C clocking
+  - 3-Phase Mode: Alternative timing that may help with specific I2C devices or timing-sensitive applications
+- **Code Documentation**: Improved English comments throughout the codebase for better code clarity and maintainability
+- **Bug Fixes**: Corrected reversed MPSSE clocking mode commands (0x8C/0x8D)
+
 - **Version 0.2.0.0**
 - **Clock Edge Simplification**: The I2C clock edge setting is now fixed to the standard Negative edge (per FTDI/I2C specs). The UI control was removed to avoid accidental non-standard configurations.
 - **Portable Build Support**: Added documented steps (see "Portable Build" section) for publishing a self-contained, single-file package that runs on target PCs without installing .NET.

@@ -12,6 +12,7 @@ namespace UsbI2cController.Services
         private FTDI _ftdi;
         private bool _isInitialized;
         private int _currentDeviceIndex = -1;
+        private ClockingMode _currentClockingMode = ClockingMode.TwoPhase;
         
         // I2C clock edge setting (fixed to Negative Edge per I2C spec)
         private byte _i2cWriteCommand = 0x11;
@@ -20,6 +21,12 @@ namespace UsbI2cController.Services
         {
             Standard_100kHz = 0,  // 100kHz: 10us period → 5us per edge
             Fast_400kHz = 1       // 400kHz: 2.5us period → 1.25us per edge
+        }
+        
+        public enum ClockingMode
+        {
+            TwoPhase = 0,   // 2-phase clocking (default, standard I2C)
+            ThreePhase = 1  // 3-phase clocking (may affect timing)
         }
         
         // Debug log event
@@ -172,9 +179,10 @@ namespace UsbI2cController.Services
                 // Disable loopback
                 initBuffer.Add(0x85); // Disable loopback
                 
-                // Explicitly set 2-phase clocking (default)
-                // Note: Using 0x8C enables 3-phase clocking which may affect clock frequency
-                initBuffer.Add(0x8D); // Disable 3-phase clocking (use 2-phase)
+                // Set clocking mode (default: 2-phase)
+                // 0x8D = Disable 3-phase clocking (use 2-phase)
+                // 0x8C = Enable 3-phase clocking
+                initBuffer.Add(_currentClockingMode == ClockingMode.TwoPhase ? (byte)0x8D : (byte)0x8C);
                 
                 // Disable adaptive clocking
                 initBuffer.Add(0x97); // Turn off adaptive clocking
@@ -264,6 +272,59 @@ namespace UsbI2cController.Services
         }
 
         /// <summary>
+        /// Set MPSSE clocking mode
+        /// </summary>
+        /// <param name="mode">Clocking mode (TwoPhase or ThreePhase)</param>
+        /// <returns>True if successful</returns>
+        public bool SetClockingMode(ClockingMode mode)
+        {
+            if (!_isInitialized)
+            {
+                Log("Cannot set clocking mode: Device not initialized");
+                return false;
+            }
+
+            try
+            {
+                List<byte> buffer = new List<byte>();
+                
+                // 0x8D = Disable 3-phase clocking (use 2-phase)
+                // 0x8C = Enable 3-phase clocking
+                byte command = mode == ClockingMode.TwoPhase ? (byte)0x8D : (byte)0x8C;
+                buffer.Add(command);
+                
+                uint bytesWritten = 0;
+                FTDI.FT_STATUS status = _ftdi.Write(buffer.ToArray(), buffer.Count, ref bytesWritten);
+                
+                if (status == FTDI.FT_STATUS.FT_OK)
+                {
+                    _currentClockingMode = mode;
+                    Log($"Clocking mode set to: {mode}");
+                    return true;
+                }
+                else
+                {
+                    Log($"Failed to set clocking mode: {status}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Exception setting clocking mode: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get current clocking mode
+        /// </summary>
+        /// <returns>Current clocking mode</returns>
+        public ClockingMode GetClockingMode()
+        {
+            return _currentClockingMode;
+        }
+
+        /// <summary>
         /// Write data to I2C device (continuous transmission from START to STOP)
         /// </summary>
         /// <param name="deviceAddress">7-bit I2C address</param>
@@ -302,19 +363,19 @@ namespace UsbI2cController.Services
                 // Get Acknowledge bit for address
                 buffer.Add(0x80); // Command to set directions of lower 8 pins
                 buffer.Add(0x00); // Set SCL low
-                buffer.Add(0x11); // Set SK, GPIOL0 as output, DO and others as input
+                buffer.Add(0x01); // Set SK as output, DO and others as input
                 
                 buffer.Add(0x22); // MSB_RISING_EDGE_CLOCK_BIT_IN - scan in ACK bit
                 buffer.Add(0x00); // Length of 0x0 means to scan in 1 bit
                 
-                // Set SDA high, SCL low after ACK
-                buffer.Add(0x80);
-                buffer.Add(0x02); // Set SDA high, SCL low
-                buffer.Add(0x13); // Set SK,DO,GPIOL0 as output
-                
                 // Send data bytes
                 foreach (byte dataByte in data)
                 {
+                    // Set SDA high, SCL low after ACK
+                    buffer.Add(0x80);
+                    buffer.Add(0x02); // Set SDA high, SCL low
+                    buffer.Add(0x03); // Set SK,DO as output
+
                     // Clock data byte out on -ve Clock Edge MSB first
                     buffer.Add(0x11); // MSB_FALLING_EDGE_CLOCK_BYTE_OUT
                     buffer.Add(0x00); // Length Low
@@ -324,27 +385,23 @@ namespace UsbI2cController.Services
                     // Get Acknowledge bit
                     buffer.Add(0x80); // Command to set directions
                     buffer.Add(0x00); // Set SCL low
-                    buffer.Add(0x11); // Set SK, GPIOL0 as output, DO and others as input
+                    buffer.Add(0x01); // Set SK as output, DO and others as input
                     
                     buffer.Add(0x22); // MSB_RISING_EDGE_CLOCK_BIT_IN - scan in ACK bit
                     buffer.Add(0x00); // Length of 0x0 means to scan in 1 bit
-                    
-                    // Set SDA high, SCL low after ACK
-                    buffer.Add(0x80);
-                    buffer.Add(0x02); // Set SDA high, SCL low
-                    buffer.Add(0x13); // Set SK,DO,GPIOL0 as output
+
                 }
-                
+
                 // STOP condition
                 buffer.AddRange(I2CStop());
-                
-                // Send answer back immediate command
+
+                // // Send answer back immediate command
                 buffer.Add(0x87);
-                
+                // dump buffer
+                Log($"I2C Write: Command buffer: {BitConverter.ToString(buffer.ToArray())}");
                 // Send all commands at once
                 uint bytesWritten = 0;
-                FTDI.FT_STATUS status = _ftdi.Write(buffer.ToArray(), buffer.Count, ref bytesWritten);
-                
+                FTDI.FT_STATUS status = _ftdi.Write(buffer.ToArray(), buffer.Count, ref bytesWritten);                
                 if (status != FTDI.FT_STATUS.FT_OK)
                 {
                     Log($"I2C Write failed: Write command error");
@@ -798,7 +855,9 @@ namespace UsbI2cController.Services
 
                 // Check reserved address ranges
             if (startAddress < 0x03) startAddress = 0x03;  // 0x00-0x02 reserved
-            if (endAddress > 0x77) endAddress = 0x77;      // 0x78-0x7F reserved            Log($"=== I2C Bus Scan Started (0x{startAddress:X2} - 0x{endAddress:X2}) ===");
+            if (endAddress > 0x77) endAddress = 0x77;      // 0x78-0x7F reserved
+            
+            Log($"=== I2C Bus Scan Started (0x{startAddress:X2} - 0x{endAddress:X2}) ===");
 
             int totalAddresses = endAddress - startAddress + 1;
             int currentIndex = 0;
@@ -945,9 +1004,9 @@ namespace UsbI2cController.Services
             for (int i = 0; i < 4; i++)
             {
                 cmd.Add(0x80); // Set data bits low byte
-                cmd.Add(0x03); // Value: AD0(SCL)=1, AD1(SDA)=0, AD2=0, AD3=1, others=1
-                               // Binary: 1111 1101 - SDA low, SCL high
-                cmd.Add(0x13); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
+                cmd.Add(0x03); // Value: AD0(SCL)=1, AD1(SDA)=1, AD2=0, AD3=0 (0x03 = 0000 0011)
+                               // SCL=1, SDA=1 initially (idle state before START)
+                cmd.Add(0x03); // Direction: AD0/1=out, AD2-7=in (0x03 = 0000 0011)
             }
             
             // START condition complete: SCL Low
@@ -955,53 +1014,50 @@ namespace UsbI2cController.Services
             for (int i = 0; i < 4; i++)
             {
                 cmd.Add(0x80); // Set data bits low byte
-                cmd.Add(0x01); // Value: AD0(SCL)=0, AD1(SDA)=0, AD2=0, AD3=1, others=1
-                               // Binary: 1111 1100 - Both SCL and SDA low
-                cmd.Add(0x13); // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
+                cmd.Add(0x01); // Value: AD0(SCL)=1, AD1(SDA)=0, AD2=0, AD3=0 (0x01 = 0000 0001)
+                               // SCL=1, SDA=0 (START condition: SDA goes low while SCL high)
+                cmd.Add(0x03); // Direction: AD0/1=out, AD2-7=in (0x03 = 0000 0011)
             }
             cmd.Add(0x80);
             cmd.Add(0x00); 
-            cmd.Add(0x13);
+            cmd.Add(0x03);
 
             return cmd.ToArray();
         }
 
         // I2C STOP condition
         private byte[] I2CStop()
-        {
-            // FTDI AN_255 compliant: Repeat each state 4 times to ensure minimum stop setup and hold time
+        {            
             List<byte> cmd = new List<byte>();
             
-            // Initial condition for the I2C Stop - Pull data low (Clock will already be low and is kept low)
-            // Repeat 4 times to ensure minimum stop setup time
-            for (int i = 0; i < 4; i++)
+            // SCL low, SDA low
+            for (int j = 0; j < 10; j++)
             {
-                cmd.Add(0x80); // Command to set ADbus direction/data
-                cmd.Add(0xFC); // put data and clock low
-                               // Value: 1111 1100 - AD0(SCL)=0, AD1(SDA)=0
-                cmd.Add(0xFB); // Set pins o/p except bit 2 (data_in)
-                               // Direction: 1111 1011 - AD0/1/3-7=out, AD2=in
+                cmd.Add(0x80); // MPSSE_CMD_SET_DATA_BITS_LOWBYTE
+                cmd.Add(0x00);
+                cmd.Add(0x03);
             }
             
-            // Clock now goes high (open drain)
-            // Repeat 4 times to ensure minimum stop setup time
-            for (int i = 0; i < 4; i++)
+            // SCL high, SDA low
+            for (int j = 0; j < 10; j++)
             {
-                cmd.Add(0x80); // Command to set ADbus direction/data
-                cmd.Add(0xFD); // put data low, clock remains high
-                               // Value: 1111 1101 - AD0(SCL)=1, AD1(SDA)=0
-                cmd.Add(0xFB); // Set pins o/p except bit 2 (data_in)
+                cmd.Add(0x80); // MPSSE_CMD_SET_DATA_BITS_LOWBYTE
+                cmd.Add(0x01);
+                cmd.Add(0x03);
             }
             
-            // Data now goes high too (both clock and data now high / open drain)
-            // Repeat 4 times to ensure minimum stop hold time
-            for (int i = 0; i < 4; i++)
+            // SCL high, SDA high
+            for (int j = 0; j < 10; j++)
             {
-                cmd.Add(0x80); // Command to set ADbus direction/data
-                cmd.Add(0xFF); // both clock and data now high
-                               // Value: 1111 1111 - AD0(SCL)=1, AD1(SDA)=1
-                cmd.Add(0xFB); // Set pins o/p except bit 2 (data_in)
+                cmd.Add(0x80); // MPSSE_CMD_SET_DATA_BITS_LOWBYTE
+                cmd.Add(0x03);
+                cmd.Add(0x03);
             }
+            
+            // Tristate the SCL & SDA pins
+            cmd.Add(0x80);
+            cmd.Add(0x03);
+            cmd.Add(0x03);
             
             return cmd.ToArray();
         }
@@ -1026,7 +1082,7 @@ namespace UsbI2cController.Services
                 0x11, // Direction: AD0=out, AD1/2=in
                 
                 // Read ACK bit: Set SCL High and sample ACK bit
-                0x22, // Set data bits low byte
+                0x22, // Clock data bits in on +ve edge, MSB first
                 0x00, // Length Low (1 bit - 1 = 0)
                 
                 // This command tells the MPSSE to send any results gathered back immediately

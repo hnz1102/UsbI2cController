@@ -77,6 +77,12 @@ namespace UsbI2cController.ViewModels
         private bool _isClockSpeed400kHz = false;
 
         [ObservableProperty]
+        private bool _isClockingMode2Phase = true;
+
+        [ObservableProperty]
+        private bool _isClockingMode3Phase = false;
+
+        [ObservableProperty]
         private string _currentLanguage = "ja";
 
         public ObservableCollection<I2CTransaction> TransactionHistory { get; } = new ObservableCollection<I2CTransaction>();
@@ -225,6 +231,40 @@ namespace UsbI2cController.ViewModels
                 IsClockSpeed100kHz = false;
                 IsClockSpeed400kHz = true;
                 UpdateStatusMessage("StatusClockSpeed400kHz");
+            }
+        }
+
+        [RelayCommand]
+        private void SetClockingMode2Phase()
+        {
+            if (!IsConnected)
+            {
+                MessageBox.Show("デバイスに接続してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_i2cService.SetClockingMode(FT232HI2CService.ClockingMode.TwoPhase))
+            {
+                IsClockingMode2Phase = true;
+                IsClockingMode3Phase = false;
+                UpdateStatusMessage("StatusClockingMode2Phase");
+            }
+        }
+
+        [RelayCommand]
+        private void SetClockingMode3Phase()
+        {
+            if (!IsConnected)
+            {
+                MessageBox.Show("デバイスに接続してください。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_i2cService.SetClockingMode(FT232HI2CService.ClockingMode.ThreePhase))
+            {
+                IsClockingMode2Phase = false;
+                IsClockingMode3Phase = true;
+                UpdateStatusMessage("StatusClockingMode3Phase");
             }
         }
 

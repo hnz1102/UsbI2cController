@@ -85,6 +85,8 @@
     <sys:String x:Key="StatusDebugLogHidden">Debug log hidden</sys:String>
     <sys:String x:Key="StatusClockSpeed100kHz">I2C Clock Speed: 100kHz</sys:String>
     <sys:String x:Key="StatusClockSpeed400kHz">I2C Clock Speed: 400kHz</sys:String>
+    <sys:String x:Key="StatusClockingMode2Phase">Clocking Mode: 2-Phase (Standard)</sys:String>
+    <sys:String x:Key="StatusClockingMode3Phase">Clocking Mode: 3-Phase</sys:String>
     <sys:String x:Key="StatusDevicesFound">{0} device(s) found</sys:String>
     <sys:String x:Key="StatusNoDeviceFound">FT232H device not found</sys:String>
     <sys:String x:Key="StatusDeviceSearchError">Device search error: {0}</sys:String>

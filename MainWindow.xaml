@@ -113,6 +113,26 @@
                                        Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
                                        Margin="0,0,16,0"/>
                             
+                            <TextBlock Text="Clocking:" 
+                                       VerticalAlignment="Center" 
+                                       Margin="8,0,8,0"/>
+                            
+                            <RadioButton Content="2-Phase" 
+                                       IsChecked="{Binding IsClockingMode2Phase}"
+                                       Command="{Binding SetClockingMode2PhaseCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       ToolTip="Standard 2-phase clocking mode"
+                                       Margin="0,0,4,0"/>
+                            
+                            <RadioButton Content="3-Phase" 
+                                       IsChecked="{Binding IsClockingMode3Phase}"
+                                       Command="{Binding SetClockingMode3PhaseCommand}"
+                                       IsEnabled="{Binding IsConnected}"
+                                       Style="{StaticResource MaterialDesignChoiceChipRadioButton}"
+                                       ToolTip="3-phase clocking mode (may affect timing)"
+                                       Margin="0,0,16,0"/>
+                            
                             <TextBlock Text="{DynamicResource Language}" 
                                        VerticalAlignment="Center" 
                                        Margin="8,0,8,0"/>
